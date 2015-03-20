@@ -21,6 +21,13 @@ public class DebuggerCLI {
 		}
 
 	}
+	
+	
+	public static void sayHi(){
+		System.out.println("HELLOOO");
+	}
+	
+	
 
 	public static void startShell(){
 

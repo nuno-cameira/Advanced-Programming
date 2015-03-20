@@ -3,7 +3,7 @@ package test;
 class A {
 	int a = 1;
 
-	public double foo(B b) {
+	/*public double foo(B b) {
 		System.out.println("Inside A.foo");
 		if (a == 1) {
 
@@ -11,5 +11,13 @@ class A {
 		} else {
 			return b.baz(null);
 		}
+	}*/
+	
+	public double foo() {
+		System.out.println("Inside A.foo");
+		a = a/0;
+		return a;
 	}
+	
+	
 }
