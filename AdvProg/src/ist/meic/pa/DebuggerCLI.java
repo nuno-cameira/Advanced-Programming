@@ -6,6 +6,7 @@ import javassist.*;
 
 public class DebuggerCLI {
 
+	public static String test = "sdf";
 	static Scanner scanner = new Scanner(System.in);
 	public static void printClassInfo(CtClass c) {
 
@@ -58,24 +59,20 @@ public class DebuggerCLI {
 
 	public static void main(String[] args) {
 
-		String classname = "ist.meic.pa.Test";
+		String classname = "test.Example";
 
 		Translator translator = new MyTranslator();
 		Loader loader = new Loader();
 		ClassPool pool = ClassPool.getDefault();
+		
 
 		CtClass cc;
 		try {
-
+			//pool.get("ist.meic.pa.DebuggerCLI");
 			loader.addTranslator(pool, translator);
 			cc = pool.get(classname);
-			CtMethod method = cc.getDeclaredMethod("add");
-
-			//method.addLocalVariable("e", CtClass.intType);
-			method.insertBefore("System.out.println(\"before\");");
-			method.insertAfter("System.out.println(\"after\");"); // DebuggerCLI.startShell();");
-
-			cc.writeFile();
+			
+			//cc.writeFile();
 			System.out.println("run class after instrumentation");
 			loader.run(classname, args);
 			//printClassInfo(cc);
