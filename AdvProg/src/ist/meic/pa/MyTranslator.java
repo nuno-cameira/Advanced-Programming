@@ -8,7 +8,7 @@ public class MyTranslator implements Translator{
 	public void onLoad(ClassPool pool, String classname) throws NotFoundException,
 			CannotCompileException {
         CtClass cc = pool.get(classname);
-        cc.setModifiers(Modifier.PUBLIC);
+        //cc.setModifiers(Modifier.PUBLIC);
 	}
 
 	@Override
