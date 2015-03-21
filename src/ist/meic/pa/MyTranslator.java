@@ -4,6 +4,7 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.Translator;
 
@@ -16,7 +17,9 @@ public class MyTranslator implements Translator {
 		// TODO find a way to get this working without the hack
 		// Hacking like a pro
 		if (classname.equals("ist.meic.pa.DebuggerCLI")
-				|| classname.equals("javassist.Translator")) {
+				|| classname.equals("javassist.Translator")
+				|| classname.equals("javassist.NotFoundException")
+				|| classname.equals("javassist.ClassPool")) {
 			System.out.println("Nop, exit");
 			return;
 		}
@@ -24,12 +27,16 @@ public class MyTranslator implements Translator {
 
 		System.out.println("Changed methods:");
 		CtMethod[] m = cc.getDeclaredMethods();
-		for (CtMethod mm : m) {
+		/*for (CtMethod mm : m) {
 			System.out.println(" " + mm.getName());
-		}
+		}*/
 
 		CtClass etype = ClassPool.getDefault().get("java.lang.Exception");
 		for (CtMethod ctm : m) {
+			if (!Modifier.isStatic(ctm.getModifiers())) {
+				System.out.println(" " + ctm.getName());
+				ctm.insertBefore("{ System.out.println(\"RAWR \"); ist.meic.pa.DebuggerCLI.setLastObj($0); }");
+			}
 			ctm.addCatch(
 					"{ System.out.println(\"DERP\"); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
 					etype);

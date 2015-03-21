@@ -1,13 +1,23 @@
 package ist.meic.pa;
 
+import java.lang.reflect.Field;
 import java.util.Scanner;
 
 import javassist.*;
 
 public class DebuggerCLI {
 
-	public static String test = "sdf";
 	static Scanner scanner = new Scanner(System.in);
+	//static List<Object> objFlow = new ArrayList<Object>();
+	private static Object lastObj = new Object();
+
+	/*public static Object getLastObj() {
+		return lastObj;
+	}*/
+
+	public static void setLastObj(Object lastObj) {
+		DebuggerCLI.lastObj = lastObj;
+	}
 
 	public static void printClassInfo(CtClass c) {
 
@@ -19,7 +29,6 @@ public class DebuggerCLI {
 		for (CtField field : c.getFields()) {
 			System.out.println(field.getName());
 		}
-
 	}
 
 	public static void sayHi() {
@@ -28,6 +37,7 @@ public class DebuggerCLI {
 
 	public static void startShell() {
 
+		System.out.print("DebuggerCLI:> ");
 		String command = scanner.next();
 		String argument = "";
 		String value = "";
@@ -46,12 +56,12 @@ public class DebuggerCLI {
 				break;
 			case "Get":
 				argument = scanner.next();
-				System.out.println("execute Get: " + argument);
+				processGet(argument);
 				break;
 			case "Set":
 				argument = scanner.next();
 				value = scanner.next();
-				System.out.println("execute Set: " + argument + " " + value);
+				processSet(argument, value);
 				break;
 			case "Retry":
 				System.out.println("execute Retry: " + argument + " " + value);
@@ -59,11 +69,42 @@ public class DebuggerCLI {
 			default:
 				System.out.println("Unknown command");
 			}
+			System.out.print("DebuggerCLI:> ");
 			command = scanner.next();
 		}
 		System.exit(0);
 	}
 
+	
+	private static void processSet(String argument, String value) {
+		System.out.println("execute Set: " + argument + " " + value);
+
+	}
+
+	// TODO shouldn't this use like CtField and CtClass instead of Class<?> and Field?
+	private static void processGet(String argument) {
+		System.out.println("execute Get: " + argument);
+		try {
+			//System.out.println(lastObj);
+			Class<?> c = lastObj.getClass();
+			//System.out.println(c);
+			Field f = c.getDeclaredField(argument);
+			f.setAccessible(true);
+			Object value = f.get(lastObj);
+			System.out.println("Field: " + f.getName());
+			System.out.println("value: " + value);
+		} catch (NoSuchFieldException e) {
+			System.out.println("Error: there is no such field");
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	
 	public static void main(String[] args) {
 
 		String classname = "test.Example";
@@ -72,17 +113,16 @@ public class DebuggerCLI {
 		ClassPool pool = ClassPool.getDefault();
 		Loader loader = new Loader();
 
-		// CtClass cc;
 		try {
 			loader.addTranslator(pool, translator);
-			// cc = pool.get(classname);
-
-			// cc.writeFile();
 			System.out.println("run class after instrumentation");
 			loader.run(classname, args);
-			// printClassInfo(cc);
 		} catch (Throwable e) {
+			//System.out.println(e);
 			e.printStackTrace();
+			// TODO ask why Get doesn't work if we use this line below
+			//startShell();
+			
 		}
 	}
 }
