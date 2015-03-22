@@ -3,17 +3,21 @@ package ist.meic.pa;
 import java.lang.reflect.Field;
 import java.util.Scanner;
 
-import javassist.*;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtField;
+import javassist.Loader;
+import javassist.Translator;
 
 public class DebuggerCLI {
 
 	static Scanner scanner = new Scanner(System.in);
-	//static List<Object> objFlow = new ArrayList<Object>();
+	// static List<Object> objFlow = new ArrayList<Object>();
 	private static Object lastObj = new Object();
 
-	/*public static Object getLastObj() {
-		return lastObj;
-	}*/
+	/*
+	 * public static Object getLastObj() { return lastObj; }
+	 */
 
 	public static void setLastObj(Object lastObj) {
 		DebuggerCLI.lastObj = lastObj;
@@ -32,7 +36,7 @@ public class DebuggerCLI {
 	}
 
 	public static void sayHi() {
-		System.out.println("HELLOOO"); 
+		System.out.println("HELLOOO");
 	}
 
 	public static void startShell() {
@@ -75,19 +79,19 @@ public class DebuggerCLI {
 		System.exit(0);
 	}
 
-	
 	private static void processSet(String argument, String value) {
 		System.out.println("execute Set: " + argument + " " + value);
 
 	}
 
-	// TODO shouldn't this use like CtField and CtClass instead of Class<?> and Field?
+	// TODO shouldn't this use like CtField and CtClass instead of Class<?> and
+	// Field?
 	private static void processGet(String argument) {
 		System.out.println("execute Get: " + argument);
 		try {
-			//System.out.println(lastObj);
+			// System.out.println(lastObj);
 			Class<?> c = lastObj.getClass();
-			//System.out.println(c);
+			// System.out.println(c);
 			Field f = c.getDeclaredField(argument);
 			f.setAccessible(true);
 			Object value = f.get(lastObj);
@@ -104,7 +108,6 @@ public class DebuggerCLI {
 		}
 	}
 
-	
 	public static void main(String[] args) {
 
 		String classname = "test.Example";
@@ -112,17 +115,18 @@ public class DebuggerCLI {
 		Translator translator = new MyTranslator();
 		ClassPool pool = ClassPool.getDefault();
 		Loader loader = new Loader();
+		// VERY IMPORTANT LINE
+		loader.delegateLoadingOf(ist.meic.pa.DebuggerCLI.class.getName());
 
 		try {
 			loader.addTranslator(pool, translator);
 			System.out.println("run class after instrumentation");
 			loader.run(classname, args);
 		} catch (Throwable e) {
-			//System.out.println(e);
+			// System.out.println(e);
 			e.printStackTrace();
-			// TODO ask why Get doesn't work if we use this line below
-			//startShell();
-			
+			// startShell();
+
 		}
 	}
 }

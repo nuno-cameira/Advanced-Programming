@@ -14,15 +14,15 @@ public class MyTranslator implements Translator {
 	public void onLoad(ClassPool pool, String classname)
 			throws NotFoundException, CannotCompileException {
 		System.out.println("on Load: " + classname);
-		// TODO find a way to get this working without the hack
 		// Hacking like a pro
-		if (classname.equals("ist.meic.pa.DebuggerCLI")
+		/*if (classname.equals("ist.meic.pa.DebuggerCLI")
 				|| classname.equals("javassist.Translator")
 				|| classname.equals("javassist.NotFoundException")
 				|| classname.equals("javassist.ClassPool")) {
 			System.out.println("Nop, exit");
 			return;
-		}
+		}*/
+		
 		CtClass cc = pool.get(classname);
 
 		System.out.println("Changed methods:");
@@ -38,7 +38,7 @@ public class MyTranslator implements Translator {
 				ctm.insertBefore("{ System.out.println(\"RAWR \"); ist.meic.pa.DebuggerCLI.setLastObj($0); }");
 			}
 			ctm.addCatch(
-					"{ System.out.println(\"DERP\"); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
+					"{ System.out.println($e); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
 					etype);
 		}
 	}
