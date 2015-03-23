@@ -10,26 +10,16 @@ public class MyTranslator implements Translator{
 		System.out.println(classname);
         CtClass cc = pool.get(classname);
         //cc.setModifiers(Modifier.PUBLIC);
-        
-        /*CtMethod m = cc.getDeclaredMethod("bar");
-        m.insertBefore("System.out.println(\"before\");");
-        CtClass etype = ClassPool.getDefault().get("java.lang.Exception");
-        m.addCatch("{ System.out.println(\"sdgrf\"+$e); throw $e; }", etype);*/
-        CtMethod x = null;
-        CtMethod[] m = cc.getDeclaredMethods();
-        for(CtMethod mm : m){
-        	System.out.println(mm.getName());
-        	if(mm.equals("startShell")){
-        		x = mm;
-        		
-        	}
-        }
+
+        CtMethod[] ctmethods = cc.getDeclaredMethods();
         
         CtClass etype = ClassPool.getDefault().get("java.lang.Exception");
-        for(CtMethod ctm : m){
-        	
+        for(CtMethod ctm : ctmethods){
+        	if (!Modifier.isStatic(ctm.getModifiers())) {
+				System.out.println(" " + ctm.getName());
+				ctm.insertBefore("{ System.out.println(\"RAWR \"); ist.meic.pa.DebuggerCLI.setLastObj($0); }");
+			}
         	ctm.addCatch("{ ist.meic.pa.DebuggerCLI.startShell(); throw $e; }", etype);
-        	ctm.addCatch("{ test.Example.printBla(); throw $e; }", etype);
         }
 	}
 

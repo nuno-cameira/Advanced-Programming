@@ -8,6 +8,8 @@ public class DebuggerCLI {
 
 	public static String test = "sdf";
 	static Scanner scanner = new Scanner(System.in);
+	private static InspectionObject lastObj = null;
+	
 	public static void printClassInfo(CtClass c) {
 
 		System.out.println("Called Object: " + c.getName());
@@ -22,8 +24,16 @@ public class DebuggerCLI {
 
 	}
 	
-	public static void getField(Object o){
-		
+ 	public static void setLastObj(Object lastObj) {
+ 		DebuggerCLI.lastObj = new InspectionObject(lastObj);
+ 	}
+ 
+ 	private static void processGet(String argument) {	
+ 		System.out.println(argument+" "+DebuggerCLI.lastObj.getField(argument));
+ 	}
+ 	
+	public static void processSet(String field, String value){
+		DebuggerCLI.lastObj.setField(field, value);
 	}
 
 	public static void startShell(){
@@ -36,6 +46,7 @@ public class DebuggerCLI {
 			switch (command) {
 			case "Info":
 				System.out.println("execute Info: ");
+				DebuggerCLI.lastObj.printDetails();
 				break;
 			case "Throw":
 				System.out.println("execute Throw: ");
@@ -47,11 +58,13 @@ public class DebuggerCLI {
 			case "Get":
 				argument = scanner.next();
 				System.out.println("execute Get: "+argument);
+				DebuggerCLI.processGet(argument);
 				break;
 			case "Set":
 				argument = scanner.next();
 				value = scanner.next();
 				System.out.println("execute Set: "+argument+" "+value);
+				DebuggerCLI.processSet(argument, value);
 				break;
 			case "Retry":
 				System.out.println("execute Retry: "+argument+" "+value);
@@ -66,9 +79,11 @@ public class DebuggerCLI {
 		String classname = "test.Example";
 
 		Translator translator = new MyTranslator();
-		Loader loader = new Loader();
 		ClassPool pool = ClassPool.getDefault();
-
+		Loader loader = new Loader();
+		// VERY IMPORTANT LINE
+		loader.delegateLoadingOf(ist.meic.pa.DebuggerCLI.class.getName());
+		
 		CtClass cc;
 		try {
 			loader.addTranslator(pool, translator);
@@ -79,7 +94,7 @@ public class DebuggerCLI {
 			e.printStackTrace();
 		}
 		
-		// start shell when exception is thrown
+		//start shell when exception is thrown
 		//startShell();
 
 	}
