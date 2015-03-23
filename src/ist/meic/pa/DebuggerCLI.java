@@ -80,7 +80,54 @@ public class DebuggerCLI {
 	}
 
 	private static void processSet(String argument, String value) {
-		System.out.println("execute Set: " + argument + " " + value);
+		System.out.println("execute Set: " + argument + " " + value);		
+
+		try {
+			Class<?>  c = lastObj.getClass();
+			Field field = c.getDeclaredField(argument);
+			field.setAccessible(true);
+			Object o  = lastObj;
+			// TODO We need to convert value
+			field.set(o, value);
+			System.out.println(field.get(o));
+			
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchFieldException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		/*ClassPool pool = ClassPool.getDefault();
+		try {
+			CtClass c = pool.get(lastObj.getClass().getName());
+			CtField f = c.getDeclaredField(argument);
+			if (f.getType().isPrimitive()) {
+				System.out.println("yay");
+				c.defrost();
+				CtMethod m = CtNewMethod.setter("set" + argument, f);
+				c.addMethod(m);
+				c.writeFile();
+				
+			}
+		} catch (NotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CannotCompileException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 
 	}
 
