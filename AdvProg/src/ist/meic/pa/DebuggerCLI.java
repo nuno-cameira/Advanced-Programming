@@ -21,6 +21,10 @@ public class DebuggerCLI {
 		}
 
 	}
+	
+	public static void getField(Object o){
+		
+	}
 
 	public static void startShell(){
 
