@@ -13,7 +13,7 @@ class A {
 		}
 	}*/
 	
-	public double foo() {
+	public double foo(int a, int b) {
 		System.out.println("Inside A.foo");
 		a = a/0;
 		return a;

@@ -1,50 +1,72 @@
 package ist.meic.pa;
 
+import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
 
 import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
 import javassist.Loader;
 import javassist.Translator;
 
 public class DebuggerCLI {
 
-	static Scanner scanner = new Scanner(System.in);
+	private static Scanner scanner = new Scanner(System.in);
 	private static InspectionObject lastObj = null;
+	private static List<CallStack> callStack = new Stack<CallStack>();
 	
+	
+	private static class CallStack {
+
+		String methodName;
+		Object[] methodArgs;
+
+		public CallStack(String methodName, Object[] methodArgs) {
+			this.methodName = methodName;
+			this.methodArgs = methodArgs;
+		}
+
+	}
+		
+	
+	/*
 	public static void printClassInfo(CtClass c) {
 
 		System.out.println("Called Object: " + c.getName());
-		/*
+		
 		for (CtMethod method : c.getMethods()) {
 			System.out.println(method.getName());
 		}
-		*/
+		
 		for (CtField field : c.getFields()) {
 			System.out.println(field.getName());
 		}
 
+	}*/
+	
+	public static void addToStack(String methodName, Object[] methodArgs){
+		callStack.add(new DebuggerCLI.CallStack(methodName, methodArgs));
+	}
+	
+	public static void printCallStack() {
+		System.out.println("Call Stack:");
+		String formatOutput = "";
+		for(CallStack cs : callStack){
+			System.out.print(lastObj.getObj().getClass().getName()+"."+cs.methodName+"(");
+			for(Object o : cs.methodArgs){
+				System.out.print(formatOutput + o);
+				formatOutput = ", ";
+			}
+			System.out.println(")");
+		}
 	}
 	
  	public static void setLastObj(Object lastObj) {
  		DebuggerCLI.lastObj = new InspectionObject(lastObj);
  	}
- 
- 	private static void processGet(String argument) {	
- 		System.out.println(argument+" "+DebuggerCLI.lastObj.getField(argument));
- 	}
- 	
-	public static void processSet(String field, String value){
-		DebuggerCLI.lastObj.setField(field, value);
-	}
 
 	public static void startShell(){
 		
-		// TODO inject
-		 /*class Local {};
-	     String name = Local.class.getEnclosingMethod().getName();
-	     System.out.println("LE NAME " + name);*/
+		//System.out.println(new Exception().getStackTrace()[0].getMethodName());
 
 		System.out.print("DebuggerCLI:> ");
 		String command = scanner.next();
@@ -56,6 +78,7 @@ public class DebuggerCLI {
 			case "Info":
 				System.out.println("execute Info: ");
 				DebuggerCLI.lastObj.printDetails();
+				printCallStack();
 				break;
 			case "Throw":
 				System.out.println("execute Throw: ");
@@ -88,76 +111,13 @@ public class DebuggerCLI {
 	}
 	
 	
-	/*
-	private static void processSet(String argument, String value) {
-		System.out.println("execute Set: " + argument + " " + value);		
-
-		try {
-			Class<?>  c = lastObj.getClass();
-			Field field = c.getDeclaredField(argument);
-			field.setAccessible(true);
-			Object o  = lastObj;
-			// TODO We need to convert value
-			field.set(o, value);
-			System.out.println(field.get(o));
-			
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (NoSuchFieldException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		}*/
-		
-		/*
-		ClassPool pool = ClassPool.getDefault();
-		try {
-			CtClass c = pool.get(lastObj.getClass().getName());
-			CtField f = c.getDeclaredField(argument);
-			if (f.getType().isPrimitive()) {
-				System.out.println("yay");
-				c.defrost();
-				CtMethod m = CtNewMethod.setter("set" + argument, f);
-				c.addMethod(m);
-				c.writeFile();
-				
-			}
-		} catch (NotFoundException e) {
-			e.printStackTrace();
-		} catch (CannotCompileException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}*/
-
-	// TODO shouldn't this use like CtField and CtClass instead of Class<?> and
-	// Field?
-	/*private static void processGet(String argument) {
-		System.out.println("execute Get: " + argument);
-		try {
-			// System.out.println(lastObj);
-			Class<?> c = lastObj.getClass();
-			// System.out.println(c);
-			Field f = c.getDeclaredField(argument);
-			f.setAccessible(true);
-			Object value = f.get(lastObj);
-			System.out.println("Field: " + f.getName());
-			System.out.println("value: " + value);
-		} catch (NoSuchFieldException e) {
-			System.out.println("Error: there is no such field");
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
-	}*/
-	
+ 	private static void processGet(String argument) {	
+ 		System.out.println(argument+" "+DebuggerCLI.lastObj.getField(argument));
+ 	}
+ 	
+	private static void processSet(String field, String value){
+		DebuggerCLI.lastObj.setField(field, value);
+	}
 	
 
 	public static void main(String[] args) {

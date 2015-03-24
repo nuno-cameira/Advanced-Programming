@@ -4,19 +4,23 @@ import ist.meic.pa.fields.FieldFactory;
 import ist.meic.pa.fields.FieldType;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 public class InspectionObject {
 
-	Object o = null;
+	private Object obj = null;
 	
+	public Object getObj() {
+		return obj;
+	}
+
 	public InspectionObject(Object o){
-		this.o = o;
+		this.obj = o;
 	}
 	
 	public void printDetails(){
-		System.out.println(o.toString() +" is an instance of "+o.getClass().getName());
-		System.out.println("---------------");
+		//System.out.println(obj.toString() +" is an instance of "+obj.getClass().getName());
+		//System.out.println("---------------");
+		System.out.println("Called Object: " + obj.toString());
 		printFields();
 		// TODO print stack trace
 		
@@ -25,13 +29,12 @@ public class InspectionObject {
 	public String getField(String field){
 		Field f = null;
 		try {
-			f = o.getClass().getDeclaredField(field);
+			f = obj.getClass().getDeclaredField(field);
 			f.setAccessible(true);
-			if(f.get(o) == null)
+			if(f.get(obj) == null)
 				return "null";
-			return f.get(o).toString();
+			return f.get(obj).toString();
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return "null";
@@ -40,32 +43,33 @@ public class InspectionObject {
 	public void setField(String field, String value){
 		Field f = null;
 		try {
-			f = o.getClass().getDeclaredField(field);
+			f = obj.getClass().getDeclaredField(field);
 		} catch (NoSuchFieldException | SecurityException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		f.setAccessible(true);
 		
-		FieldType ft = FieldFactory.getFieldType(o, f);
+		FieldType ft = FieldFactory.getFieldType(obj, f);
 		ft.modify(value);
 	}
 	
 	
 	
 	public void printFields(){
-		Field[] fields = o.getClass().getDeclaredFields();
+		Field[] fields = obj.getClass().getDeclaredFields();
+		System.out.print("       Fields: ");
+		String formatOutput = "";
 		for (Field f: fields){
 			try {
 				f.setAccessible(true);				
-				if(f.getModifiers() > 0){
+				/*if(f.getModifiers() > 0){
 					System.out.print(Modifier.toString(f.getModifiers())+" ");
-				}
-				System.out.println(f.getType() + " " + f.getName() + " = "  + f.get(o));
+				}*/
+				System.out.println(formatOutput + f.getType() + " " + f.getName() + " = "  + f.get(obj));
 			} catch (IllegalArgumentException | IllegalAccessException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} 
+			}
+			formatOutput = "               ";
 		}
 	}
 
