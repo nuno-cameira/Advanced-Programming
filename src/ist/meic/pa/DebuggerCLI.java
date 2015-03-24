@@ -1,6 +1,8 @@
 package ist.meic.pa;
 
-import java.util.List;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -12,9 +14,8 @@ public class DebuggerCLI {
 
 	private static Scanner scanner = new Scanner(System.in);
 	private static InspectionObject lastObj = null;
-	private static List<CallStack> callStack = new Stack<CallStack>();
-	
-	
+	private static Stack<CallStack> callStack = new Stack<CallStack>();
+
 	private static class CallStack {
 
 		String methodName;
@@ -26,53 +27,53 @@ public class DebuggerCLI {
 		}
 
 	}
-		
-	
+
 	/*
-	public static void printClassInfo(CtClass c) {
+	 * public static void printClassInfo(CtClass c) {
+	 * 
+	 * System.out.println("Called Object: " + c.getName());
+	 * 
+	 * for (CtMethod method : c.getMethods()) {
+	 * System.out.println(method.getName()); }
+	 * 
+	 * for (CtField field : c.getFields()) {
+	 * System.out.println(field.getName()); }
+	 * 
+	 * }
+	 */
 
-		System.out.println("Called Object: " + c.getName());
-		
-		for (CtMethod method : c.getMethods()) {
-			System.out.println(method.getName());
-		}
-		
-		for (CtField field : c.getFields()) {
-			System.out.println(field.getName());
-		}
-
-	}*/
-	
-	public static void addToStack(String methodName, Object[] methodArgs){
-		callStack.add(new DebuggerCLI.CallStack(methodName, methodArgs));
+	public static void addToStack(String methodName, Object[] methodArgs) {
+		callStack.push(new DebuggerCLI.CallStack(methodName, methodArgs));
 	}
-	
+
 	public static void printCallStack() {
 		System.out.println("Call Stack:");
 		String formatOutput = "";
-		for(CallStack cs : callStack){
-			System.out.print(lastObj.getObj().getClass().getName()+"."+cs.methodName+"(");
-			for(Object o : cs.methodArgs){
+		for (CallStack cs : callStack) {
+			System.out.print(lastObj.getObj().getClass().getName() + "."
+					+ cs.methodName + "(");
+			for (Object o : cs.methodArgs) {
 				System.out.print(formatOutput + o);
 				formatOutput = ", ";
 			}
 			System.out.println(")");
 		}
 	}
-	
- 	public static void setLastObj(Object lastObj) {
- 		DebuggerCLI.lastObj = new InspectionObject(lastObj);
- 	}
 
-	public static void startShell(){
-		
-		//System.out.println(new Exception().getStackTrace()[0].getMethodName());
+	public static void setLastObj(Object lastObj) {
+		DebuggerCLI.lastObj = new InspectionObject(lastObj);
+	}
+
+	public static void startShell() {
+
+		// System.out.println(new
+		// Exception().getStackTrace()[0].getMethodName());
 
 		System.out.print("DebuggerCLI:> ");
 		String command = scanner.next();
 		String argument = "";
 		String value = "";
-		
+
 		while (!command.equals("Abort")) {
 			switch (command) {
 			case "Info":
@@ -85,21 +86,19 @@ public class DebuggerCLI {
 				return;
 			case "Return":
 				argument = scanner.next();
-				System.out.println("execute Return: "+argument);
+				System.out.println("execute Return: " + argument);
 				break;
 			case "Get":
 				argument = scanner.next();
-				System.out.println("execute Get: "+argument);
-				DebuggerCLI.processGet(argument);
+				processGet(argument);
 				break;
 			case "Set":
 				argument = scanner.next();
 				value = scanner.next();
-				System.out.println("execute Set: "+argument+" "+value);
-				DebuggerCLI.processSet(argument, value);
+				processSet(argument, value);
 				break;
 			case "Retry":
-				System.out.println("execute Retry: "+argument+" "+value);
+				processRetry();
 				break;
 			default:
 				System.out.println("Unknown command");
@@ -109,16 +108,63 @@ public class DebuggerCLI {
 		}
 		System.exit(0);
 	}
-	
-	
- 	private static void processGet(String argument) {	
- 		System.out.println(argument+" "+DebuggerCLI.lastObj.getField(argument));
- 	}
- 	
-	private static void processSet(String field, String value){
+
+	private static void processGet(String argument) {
+		System.out.println("execute Get: " + argument);
+		System.out.println(argument + " "
+				+ DebuggerCLI.lastObj.getField(argument));
+	}
+
+	private static void processSet(String field, String value) {
+		System.out.println("execute Set: " + field + " " + value);
 		DebuggerCLI.lastObj.setField(field, value);
 	}
-	
+
+	// TODO ASK: When we do Retry does it count as execution of the program? Do
+	// we add that method to the call stack?
+	private static void processRetry() {
+		System.out.println("execute Retry:");
+
+		CallStack cs = callStack.peek();
+		String methodName = cs.methodName;
+
+		ArrayList<Class<?>> argsTemp = new ArrayList<Class<?>>();
+
+		// builds an ArrayList with the argument's type for that method
+		for (Object o : cs.methodArgs) {
+			Class<?> cc = null;
+			if (Unwrapper.isWrapperType(o.getClass())) {
+				cc = Unwrapper.unwrap(o.getClass());
+			} else {
+				cc = o.getClass();
+			}
+			argsTemp.add(cc);
+		}
+
+		// converts ArrayList to a simple array
+		Class<?>[] argsType = new Class<?>[argsTemp.size()];
+		Class<?>[] args = argsTemp.toArray(argsType);
+
+		try {
+			/*for (Method m1 : lastObj.getObj().getClass().getDeclaredMethods()) {
+				System.out.println(m1);
+			}*/
+			Method m = lastObj.getObj().getClass()
+					.getDeclaredMethod(methodName, args);
+			m.setAccessible(true);
+			m.invoke(lastObj.getObj(), cs.methodArgs);
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public static void main(String[] args) {
 
@@ -129,16 +175,16 @@ public class DebuggerCLI {
 		Loader loader = new Loader();
 		// VERY IMPORTANT LINE
 		loader.delegateLoadingOf(ist.meic.pa.DebuggerCLI.class.getName());
-		
+
 		try {
 			loader.addTranslator(pool, translator);
 			loader.run(classname, args);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-		
-		//start shell when exception is thrown
-		//startShell();
+
+		// start shell when exception is thrown
+		// startShell();
 
 	}
 }
