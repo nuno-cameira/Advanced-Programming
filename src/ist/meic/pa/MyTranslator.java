@@ -37,7 +37,7 @@ public class MyTranslator implements Translator {
 				System.out.println(" " + ctm.getName());
 				ctm.insertBefore(insertionString);
 			}
-			ctm.addCatch("{ ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
+			ctm.addCatch("{ System.out.println($e); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
 					etype);
 		}
 	}

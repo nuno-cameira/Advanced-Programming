@@ -18,6 +18,7 @@ public class InspectionObject {
 	}
 	
 	public void printDetails(){
+		System.out.println("printDetails");
 		//System.out.println(obj.toString() +" is an instance of "+obj.getClass().getName());
 		//System.out.println("---------------");
 		System.out.println("Called Object: " + obj.toString());
@@ -65,12 +66,14 @@ public class InspectionObject {
 				/*if(f.getModifiers() > 0){
 					System.out.print(Modifier.toString(f.getModifiers())+" ");
 				}*/
-				System.out.println(formatOutput + f.getType() + " " + f.getName() + " = "  + f.get(obj));
-			} catch (IllegalArgumentException | IllegalAccessException e) {
+				//System.out.println(formatOutput + f.getType() + " " + f.getName() + " = "  + f.get(obj));
+				System.out.print(formatOutput+f.getName());
+			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			}
-			formatOutput = "               ";
+			formatOutput = " ";
 		}
+		System.out.println();
 	}
 
 }

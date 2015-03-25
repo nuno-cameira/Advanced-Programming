@@ -3,6 +3,7 @@ package ist.meic.pa;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Stack;
 
@@ -18,10 +19,14 @@ public class DebuggerCLI {
 
 	private static class CallStack {
 
+		String className; 
 		String methodName;
 		Object[] methodArgs;
+		
+		
 
-		public CallStack(String methodName, Object[] methodArgs) {
+		public CallStack(String className, String methodName, Object[] methodArgs) {
+			this.className = className;
 			this.methodName = methodName;
 			this.methodArgs = methodArgs;
 		}
@@ -43,31 +48,46 @@ public class DebuggerCLI {
 	 */
 
 	public static void addToStack(String methodName, Object[] methodArgs) {
-		callStack.push(new DebuggerCLI.CallStack(methodName, methodArgs));
+		System.out.println("MN "+methodName);
+		for(Object o : methodArgs){
+			System.out.println("AA"+ o);
+		}
+		//System.out.println("OO "+lastObj.getObj().getClass().getName());
+		callStack.push(new DebuggerCLI.CallStack(lastObj.getObj().getClass().getName(), methodName, methodArgs));
 	}
 
 	public static void printCallStack() {
 		System.out.println("Call Stack:");
 		String formatOutput = "";
-		for (CallStack cs : callStack) {
-			System.out.print(lastObj.getObj().getClass().getName() + "."
+		//for (CallStack cs : callStack) {
+		List<CallStack> stampTemp = new Stack<CallStack>();
+		//Stack<CallStack> stampTemp = new Stack<CallStack>();
+		stampTemp.addAll(callStack);
+		Stack<CallStack> stampTemp2 = new Stack<CallStack>();
+		stampTemp2 = (Stack<CallStack>)stampTemp;
+			while(!stampTemp2.empty()){
+				CallStack cs = stampTemp2.pop();
+			System.out.print(cs.className + "."
 					+ cs.methodName + "(");
 			for (Object o : cs.methodArgs) {
 				System.out.print(formatOutput + o);
 				formatOutput = ", ";
 			}
+			formatOutput = "";
 			System.out.println(")");
 		}
 	}
 
 	public static void setLastObj(Object lastObj) {
+		System.out.println("setLastObj");
+		System.out.println("OBJ "+lastObj);
 		DebuggerCLI.lastObj = new InspectionObject(lastObj);
 	}
 
 	public static void startShell() {
 
-		// System.out.println(new
-		// Exception().getStackTrace()[0].getMethodName());
+		//System.out.println(new Exception().getStackTrace()[0].getMethodName());
+		System.out.println(new Exception().getStackTrace()[0].getClassName());
 
 		System.out.print("DebuggerCLI:> ");
 		String command = scanner.next();
@@ -78,11 +98,13 @@ public class DebuggerCLI {
 			switch (command) {
 			case "Info":
 				System.out.println("execute Info: ");
+				//System.out.println("sdf"+lastObj.getObj());
 				DebuggerCLI.lastObj.printDetails();
 				printCallStack();
 				break;
 			case "Throw":
 				System.out.println("execute Throw: ");
+				callStack.pop();
 				return;
 			case "Return":
 				argument = scanner.next();
@@ -110,9 +132,8 @@ public class DebuggerCLI {
 	}
 
 	private static void processGet(String argument) {
-		System.out.println("execute Get: " + argument);
-		System.out.println(argument + " "
-				+ DebuggerCLI.lastObj.getField(argument));
+		//System.out.println("execute Get: " + argument);
+		System.out.println(DebuggerCLI.lastObj.getField(argument));
 	}
 
 	private static void processSet(String field, String value) {
@@ -168,7 +189,7 @@ public class DebuggerCLI {
 
 	public static void main(String[] args) {
 
-		String classname = "test.Example";
+		String classname = args[0];
 
 		Translator translator = new MyTranslator();
 		ClassPool pool = ClassPool.getDefault();
@@ -178,13 +199,13 @@ public class DebuggerCLI {
 
 		try {
 			loader.addTranslator(pool, translator);
+			Object[] obs = {classname};
+			//
+			callStack.push(new DebuggerCLI.CallStack(classname, "main", obs));
+			setLastObj(Class.forName(classname).newInstance());
 			loader.run(classname, args);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-
-		// start shell when exception is thrown
-		// startShell();
-
 	}
 }

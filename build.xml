@@ -14,7 +14,7 @@
 	</path>
 
 	<target name="clean">
-		<delete dir="${build.dir}" />
+		<delete dir="${build.dir}" file="debugger.jar" />
 	</target>
 
 	<target name="init">
@@ -24,13 +24,13 @@
 
 	<target name="compile" depends="init">
 		<mkdir dir="${jar.dir}" />
-		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+		<jar destfile="debugger.jar" basedir="${classes.dir}">
 			<manifest>
 				<attribute name="DebuggerCLI" value="${main-class}" />
 			</manifest>
 		</jar>
 	</target>
-
+<!-- 
 	<target name="run" depends="compile">
 		<java classname="${main-class}" fork="true">
 			<classpath>
@@ -38,10 +38,11 @@
 				<path location="${jar.dir}/${ant.project.name}.jar" />
 			</classpath>
 		</java>
-	</target>
+	</target> 
 
-	<target name="clean-build" depends="clean,compile" />
+	<target name="clean-build" depends="clean,compile" /> -->
+	
 
-	<target name="main" depends="clean,run" />
+	<target name="main" depends="clean,compile" />
 
 </project>
