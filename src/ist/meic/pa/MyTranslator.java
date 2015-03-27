@@ -3,7 +3,9 @@ package ist.meic.pa;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.CtMethod;
+import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.Translator;
@@ -32,13 +34,36 @@ public class MyTranslator implements Translator {
 		CtClass etype = ClassPool.getDefault().get("java.lang.Exception");
 		String insertionString = "{ ist.meic.pa.DebuggerCLI.setLastObj($0); ist.meic.pa.DebuggerCLI.addToStack(new Exception().getStackTrace()[0].getMethodName(), $args);}";
 
+		CtClass returnType = null;
+		
 		for (CtMethod ctm : ctmethods) {
 			if (!Modifier.isStatic(ctm.getModifiers())) {
 				System.out.println(" " + ctm.getName());
 				ctm.insertBefore(insertionString);
+				
+				
+				returnType = ctm.getReturnType();
+				System.out.println("--------"+ returnType.getName());
+				CtMethod m = CtNewMethod.make(
+						"public "+returnType.getName()+" "+ctm.getName()+"Return(Object r) { return ($r)r; }", cc);
+				cc.addMethod(m);
+				
+				CtField f = CtField.make("public boolean doIReturn = false;", cc);
+				cc.addField(f);
+				
 			}
-			ctm.addCatch("{ System.out.println($e); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
-					etype);
+			
+			
+			
+			
+			if(!ctm.getName().equals("main")){
+				ctm.addCatch(
+						"{ System.out.println($e); Object o = ist.meic.pa.DebuggerCLI.startShell(); if(doIReturn==true){return "+ ctm.getName()+"Return(o)" +";} throw $e; }",
+						etype);	
+			}
+			else ctm.addCatch(
+					"{ System.out.println($e); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
+					etype);		
 		}
 	}
 

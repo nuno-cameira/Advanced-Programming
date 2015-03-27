@@ -1,5 +1,6 @@
 package ist.meic.pa;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ public class DebuggerCLI {
 	private static InspectionObject lastObj = null;
 	private static Stack<CallStack> callStack = new Stack<CallStack>();
 
+	//private static boolean canExecute = true;
+	
 	private static class CallStack {
 
 		Object className;
@@ -71,7 +74,14 @@ public class DebuggerCLI {
 		DebuggerCLI.lastObj = new InspectionObject(lastObj);
 	}
 
-	public static void startShell() {
+	public static Object startShell() {
+		
+		/*System.out.println("canExecute "+canExecute);
+		if(canExecute==false){
+			System.out.println("IN IF " + canExecute);
+			canExecute=true;
+			//return;
+		}*/
 
 		//System.out.println(new Exception().getStackTrace()[0].getMethodName());
 		//System.out.println(new Exception().getStackTrace()[0].getClassName());
@@ -85,7 +95,6 @@ public class DebuggerCLI {
 			switch (command) {
 			case "Info":
 				System.out.println("execute Info: ");
-				//System.out.println("sdf"+lastObj.getObj());
 				DebuggerCLI.lastObj.printDetails();
 				printCallStack();
 				break;
@@ -94,10 +103,36 @@ public class DebuggerCLI {
 				callStack.pop();
 				CallStack c = callStack.peek();
 				setLastObj(c.className);
-				return;
+				return null;
 			case "Return":
 				argument = scanner.next();
 				System.out.println("execute Return: " + argument);
+				String methodName = callStack.peek().methodName;
+				
+				try {
+					Method m = lastObj.getObj().getClass().getMethod(methodName+"Return", Object.class);
+					m.setAccessible(true);
+					System.out.println("CENA");
+					Field f = lastObj.getObj().getClass().getField("doIReturn");
+					f.setAccessible(true);
+					f.set(lastObj.getObj(), true);
+					return m.invoke(lastObj.getObj(), Double.parseDouble(argument));
+					//System.out.println("CENA1");
+				} catch (IllegalAccessException | IllegalArgumentException
+						| InvocationTargetException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (NoSuchMethodException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (NoSuchFieldException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				finally{/*canExecute=false;*/ System.out.println("FINALLY");}
 				break;
 			case "Get":
 				argument = scanner.next();
@@ -118,6 +153,7 @@ public class DebuggerCLI {
 			command = scanner.next();
 		}
 		System.exit(0);
+		return value;
 	}
 
 	private static void processGet(String argument) {
@@ -130,8 +166,6 @@ public class DebuggerCLI {
 		DebuggerCLI.lastObj.setField(field, value);
 	}
 
-	// TODO ASK: When we do Retry does it count as execution of the program? Do
-	// we add that method to the call stack?
 	private static void processRetry() {
 		System.out.println("execute Retry:");
 
@@ -143,7 +177,7 @@ public class DebuggerCLI {
 
 		// builds an ArrayList with the argument's type for that method
 		for (Object o : cs.methodArgs) {
-			System.out.println("ProcessRetry -> " +o);
+			//System.out.println("ProcessRetry -> " +o);
 			Class<?> cc = null;
 			if (Unwrapper.isWrapperType(o.getClass())) {
 				cc = Unwrapper.unwrap(o.getClass());
