@@ -19,13 +19,13 @@ public class DebuggerCLI {
 
 	private static class CallStack {
 
-		String className; 
+		Object className;
 		String methodName;
 		Object[] methodArgs;
 		
 		
 
-		public CallStack(String className, String methodName, Object[] methodArgs) {
+		public CallStack(Object className, String methodName, Object[] methodArgs) {
 			this.className = className;
 			this.methodName = methodName;
 			this.methodArgs = methodArgs;
@@ -33,27 +33,14 @@ public class DebuggerCLI {
 
 	}
 
-	/*
-	 * public static void printClassInfo(CtClass c) {
-	 * 
-	 * System.out.println("Called Object: " + c.getName());
-	 * 
-	 * for (CtMethod method : c.getMethods()) {
-	 * System.out.println(method.getName()); }
-	 * 
-	 * for (CtField field : c.getFields()) {
-	 * System.out.println(field.getName()); }
-	 * 
-	 * }
-	 */
 
 	public static void addToStack(String methodName, Object[] methodArgs) {
-		System.out.println("MN "+methodName);
+		/*System.out.println("MN "+methodName);
 		for(Object o : methodArgs){
 			System.out.println("AA"+ o);
-		}
+		}*/
 		//System.out.println("OO "+lastObj.getObj().getClass().getName());
-		callStack.push(new DebuggerCLI.CallStack(lastObj.getObj().getClass().getName(), methodName, methodArgs));
+		callStack.push(new DebuggerCLI.CallStack(lastObj.getObj(), methodName, methodArgs));
 	}
 
 	public static void printCallStack() {
@@ -67,7 +54,7 @@ public class DebuggerCLI {
 		stampTemp2 = (Stack<CallStack>)stampTemp;
 			while(!stampTemp2.empty()){
 				CallStack cs = stampTemp2.pop();
-			System.out.print(cs.className + "."
+			System.out.print(cs.className.getClass().getName() + "."
 					+ cs.methodName + "(");
 			for (Object o : cs.methodArgs) {
 				System.out.print(formatOutput + o);
@@ -79,15 +66,15 @@ public class DebuggerCLI {
 	}
 
 	public static void setLastObj(Object lastObj) {
-		System.out.println("setLastObj");
-		System.out.println("OBJ "+lastObj);
+		//System.out.println("setLastObj");
+		//System.out.println("OBJ "+lastObj);
 		DebuggerCLI.lastObj = new InspectionObject(lastObj);
 	}
 
 	public static void startShell() {
 
 		//System.out.println(new Exception().getStackTrace()[0].getMethodName());
-		System.out.println(new Exception().getStackTrace()[0].getClassName());
+		//System.out.println(new Exception().getStackTrace()[0].getClassName());
 
 		System.out.print("DebuggerCLI:> ");
 		String command = scanner.next();
@@ -105,6 +92,8 @@ public class DebuggerCLI {
 			case "Throw":
 				System.out.println("execute Throw: ");
 				callStack.pop();
+				CallStack c = callStack.peek();
+				setLastObj(c.className);
 				return;
 			case "Return":
 				argument = scanner.next();
@@ -148,11 +137,13 @@ public class DebuggerCLI {
 
 		CallStack cs = callStack.peek();
 		String methodName = cs.methodName;
+		callStack.pop();
 
 		ArrayList<Class<?>> argsTemp = new ArrayList<Class<?>>();
 
 		// builds an ArrayList with the argument's type for that method
 		for (Object o : cs.methodArgs) {
+			System.out.println("ProcessRetry -> " +o);
 			Class<?> cc = null;
 			if (Unwrapper.isWrapperType(o.getClass())) {
 				cc = Unwrapper.unwrap(o.getClass());
@@ -167,8 +158,10 @@ public class DebuggerCLI {
 		Class<?>[] args = argsTemp.toArray(argsType);
 
 		try {
-			/*for (Method m1 : lastObj.getObj().getClass().getDeclaredMethods()) {
-				System.out.println(m1);
+			/*System.out.println("--------");
+			for(Method m : lastObj.getObj().getClass()
+					.getDeclaredMethods()){
+				System.out.println(m);
 			}*/
 			Method m = lastObj.getObj().getClass()
 					.getDeclaredMethod(methodName, args);
@@ -199,9 +192,12 @@ public class DebuggerCLI {
 
 		try {
 			loader.addTranslator(pool, translator);
+			System.out.println("MAIN:" +classname);
+			Class<?> c = Class.forName(classname);
+			Object o = c.newInstance();
 			Object[] obs = {classname};
 			//
-			callStack.push(new DebuggerCLI.CallStack(classname, "main", obs));
+			callStack.push(new DebuggerCLI.CallStack(o, "main", obs));
 			setLastObj(Class.forName(classname).newInstance());
 			loader.run(classname, args);
 		} catch (Throwable e) {

@@ -2,9 +2,6 @@ package test;
 
 class B {
 	double b = 3.14;
-	boolean c = false;
-	int i = 6;
-	char a = 'a';
 
 	public double bar(int x) {
 		System.out.println("Inside B.bar");

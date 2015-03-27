@@ -18,7 +18,7 @@ public class InspectionObject {
 	}
 	
 	public void printDetails(){
-		System.out.println("printDetails");
+		//System.out.println("printDetails");
 		//System.out.println(obj.toString() +" is an instance of "+obj.getClass().getName());
 		//System.out.println("---------------");
 		System.out.println("Called Object: " + obj.toString());
