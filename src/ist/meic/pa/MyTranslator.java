@@ -9,6 +9,8 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.Translator;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 
 public class MyTranslator implements Translator {
 
@@ -34,36 +36,65 @@ public class MyTranslator implements Translator {
 		CtClass etype = ClassPool.getDefault().get("java.lang.Exception");
 		String insertionString = "{ ist.meic.pa.DebuggerCLI.setLastObj($0); ist.meic.pa.DebuggerCLI.addToStack(new Exception().getStackTrace()[0].getMethodName(), $args);}";
 
-		CtClass returnType = null;
-		
+		// CtClass returnType = null;
+
 		for (CtMethod ctm : ctmethods) {
-			if (!Modifier.isStatic(ctm.getModifiers())) {
-				System.out.println(" " + ctm.getName());
-				ctm.insertBefore(insertionString);
-				
-				
-				returnType = ctm.getReturnType();
-				System.out.println("--------"+ returnType.getName());
-				CtMethod m = CtNewMethod.make(
-						"public "+returnType.getName()+" "+ctm.getName()+"Return(Object r) { return ($r)r; }", cc);
-				cc.addMethod(m);
-				
-				CtField f = CtField.make("public boolean doIReturn = false;", cc);
-				cc.addField(f);
-				
-			}
+			System.out.println("CTMethod -> " +ctm.getName());
+			//if (!Modifier.isStatic(ctm.getModifiers())) {
+				//System.out.println(" " + ctm.getName());
+				//ctm.insertBefore(insertionString);
+
+				/*
+				 * returnType = ctm.getReturnType();
+				 * System.out.println("--------"+ returnType.getName());
+				 * CtMethod m = CtNewMethod.make(
+				 * "public "+returnType.getName()+
+				 * " "+ctm.getName()+"Return(Object r) { return ($r)r; }", cc);
+				 * cc.addMethod(m);
+				 * 
+				 * //CtField f =
+				 * CtField.make("public boolean doIReturn = false;", cc);
+				 * //cc.addField(f); ctm.addLocalVariable("doIReturn",
+				 * CtClass.booleanType);
+				 */
+
+			//}
+
+			//if(!ctm.getName().equals("main")){
 			
-			
-			
-			
-			if(!ctm.getName().equals("main")){
-				ctm.addCatch(
-						"{ System.out.println($e); Object o = ist.meic.pa.DebuggerCLI.startShell(); if(doIReturn==true){return "+ ctm.getName()+"Return(o)" +";} throw $e; }",
-						etype);	
-			}
-			else ctm.addCatch(
-					"{ System.out.println($e); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }",
-					etype);		
+			//String packageName = cc.getPackageName();
+			//System.out.println("LE PACKAGE NAME: "+packageName);
+			//if(packageName == null || !packageName.equals("java")){
+				System.out.println("-----"+ctm.getName());
+			ctm.instrument(new ExprEditor() {
+				public void edit(MethodCall m) throws CannotCompileException {
+					String packageName = null;
+					try {
+						packageName = m.getMethod().getDeclaringClass().getPackageName();
+						System.out.println("PACKAGE"+packageName);
+						if( packageName.equals("test")){
+							System.out.println("BEFORE REPLACE");	
+							String name = m.getMethodName();
+						m.replace("{  ist.meic.pa.DebuggerCLI.setLastObj($0); ist.meic.pa.DebuggerCLI.addToStack(\""+name+"\", $args); Object o = ist.meic.pa.DebuggerCLI.run(); if(o instanceof Exception){throw (Throwable)o; } else $_ = ($r)o; }");
+						}
+					} catch (NotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+				}
+			});
+			//}
+			//}
+
+			/*
+			 * if(!ctm.getName().equals("main")){ ctm.addCatch(
+			 * "{ System.out.println($e); Object o = ist.meic.pa.DebuggerCLI.startShell(); if(doIReturn==true){return "
+			 * + ctm.getName()+"Return(o)" +";} throw $e; }", etype); } else
+			 * ctm.addCatch(
+			 * "{ System.out.println($e); ist.meic.pa.DebuggerCLI.startShell(); throw $e; }"
+			 * , etype);
+			 */
 		}
 	}
 
