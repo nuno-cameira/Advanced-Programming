@@ -146,9 +146,57 @@ public class DebuggerCLI {
 		return null;
 	}
 
-	private static Object processReturn(String argument) {
-		String methodName = callStack.peek().methodName;
+	public static Method getMethodSafe() {
+		CallStack cs = callStack.peek();
+		String methodName = cs.methodName;
+
+		Object last = DebuggerCLI.lastObj.getObj();
+		if (cs.methodArgs[0] == null) { // TODO cleanup
+			if (last != null) {
+				System.out.println("OH NOES.. method args is null");
+				Method[] methods = last.getClass().getMethods();
+				for (Method m : methods) {
+					if (m.getName().equals(cs.methodName)) {
+						m.setAccessible(true);
+						return m;
+					}
+				}
+			} else {
+				System.out.println("OH NOES.. method args is null");
+				Class<?> c = (Class<?>) cs.className;
+				Method[] methods = c.getMethods();
+				for (Method m : methods) {
+					if (m.getName().equals(cs.methodName)) {
+						m.setAccessible(true);
+						return m;
+					}
+				}
+			}
+		}
+
+		Class<?>[] args = DebuggerCLI.getClassesOfMethodArgs(cs);
+
 		Method m = null;
+		try {
+			if (last != null) {
+				m = last.getClass().getMethod(methodName, args);
+				m.setAccessible(true);
+				return m;
+			} else {
+				Class<?> c = (Class<?>) cs.className;
+				m = c.getMethod(methodName, args);
+				m.setAccessible(true);
+				return m;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return m;
+	}
+
+	private static Object processReturn(String argument) {
+		Method m = getMethodSafe();
+/*		String methodName = callStack.peek().methodName;
 
 		if (lastObj.getObj() == null) {
 			try {
@@ -170,16 +218,20 @@ public class DebuggerCLI {
 				e.printStackTrace();
 			}
 		}
+		*/
 		if (m != null) {
-			m.setAccessible(true);
+			//m.setAccessible(true);
 			System.out.println("Return -> method type"
 					+ FieldFactory.getType(argument,
 							m.getReturnType().getName()).getClass());
 			callStack.pop();
 			return FieldFactory.getType(argument, m.getReturnType().getName());
+		}else{
+			System.out.println("problem.. method not found");
+			//callStack.pop();
+			return m;
 		}
-		callStack.pop();
-		return m;
+
 	}
 
 	private static void processGet(String argument) {

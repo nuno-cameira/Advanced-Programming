@@ -17,14 +17,14 @@ public class FieldFactory {
     }
     
     public static Object getType(String value, String type){
-        if("char".equalsIgnoreCase(type)) return new Character(value.charAt(0));
+        if("char".equalsIgnoreCase(type)) return (value.length()>=1)?new Character(value.charAt(0)):null;
         else if("String".equalsIgnoreCase(type)) return value;
-           else if("int".equalsIgnoreCase(type)) return new Integer(value);
-           else if("boolean".equalsIgnoreCase(type)) return new Boolean(value);
-           else if("long".equalsIgnoreCase(type)) return new Long(value);
-           else if("double".equalsIgnoreCase(type)){System.out.println("CONVERTED"); return new Double( Double.parseDouble(value));}
-           else if("float".equalsIgnoreCase(type)) return new Float(value);
-           else if("byte".equalsIgnoreCase(type)) return new Byte(value);
-           return null;
+        else if("int".equalsIgnoreCase(type)) return new Integer(Integer.parseInt(value));
+        else if("boolean".equalsIgnoreCase(type)) return new Boolean(Boolean.parseBoolean(value));
+        else if("long".equalsIgnoreCase(type)) return new Long( Long.parseLong(value));
+        else if("double".equalsIgnoreCase(type)){ return new Double( Double.parseDouble(value));}
+        else if("float".equalsIgnoreCase(type)) return new Float(Float.parseFloat(value));
+        else if("byte".equalsIgnoreCase(type)) return new Byte(Byte.parseByte(value));
+        return null;
        }
 }

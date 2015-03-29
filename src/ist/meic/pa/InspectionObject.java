@@ -20,11 +20,37 @@ public class InspectionObject {
 		this.obj = o;
 	}
 
+	
+	
 	public Object invokeMethodOnStack() throws NoSuchMethodException,
 			SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
 		CallStack cs = DebuggerCLI.getCallStack().peek();
 		String methodName = cs.methodName;
+		//System.out.println(cs.methodArgs.length);
+		//System.out.println(cs.methodArgs[0]);
+		if (cs.methodArgs[0]==null) { // TODO cleanup
+			if (this.obj != null) {
+				System.out.println("OH NOES.. method args is null");
+				Method[] methods = this.obj.getClass().getMethods();
+				for(Method m: methods){
+					if(m.getName().equals(cs.methodName)){
+						m.setAccessible(true);
+						return m.invoke(this.obj, cs.methodArgs);
+					}
+				}
+			}else{
+				System.out.println("OH NOES.. method args is null");
+				Class<?> c = (Class<?>) cs.className;
+				Method[] methods = c.getMethods();
+				for(Method m: methods){
+					if(m.getName().equals(cs.methodName)){
+						m.setAccessible(true);
+						return m.invoke(this.obj, cs.methodArgs);
+					}
+				}			
+			}
+		}
 		Class<?>[] args = DebuggerCLI.getClassesOfMethodArgs(cs);
 
 		if (this.obj != null) {
@@ -44,7 +70,8 @@ public class InspectionObject {
 		if (this.obj != null) {
 			System.out.println("Called Object: " + obj.toString());
 		} else {
-			String classname = DebuggerCLI.getCallStack().peek().className.toString();
+			String classname = DebuggerCLI.getCallStack().peek().className
+					.toString();
 			System.out.println("Called Object: static " + classname);
 		}
 		printFields();
@@ -52,8 +79,8 @@ public class InspectionObject {
 
 	public String getField(String field) {
 		Field f = null;
-		
-		if(this.getObj() == null){
+
+		if (this.getObj() == null) {
 			CallStack cs = DebuggerCLI.getCallStack().peek();
 			try {
 				f = ((Class<?>) cs.className).getDeclaredField(field);
@@ -74,7 +101,7 @@ public class InspectionObject {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}else{
+		} else {
 			try {
 				f = obj.getClass().getDeclaredField(field);
 			} catch (NoSuchFieldException | SecurityException e) {
@@ -97,24 +124,18 @@ public class InspectionObject {
 			}
 		}
 		/*
-		 * 		Field f = null;
-		try {
-			f = obj.getClass().getDeclaredField(field);
-			f.setAccessible(true);
-			if (f.get(obj) == null)
-				return "null";
-			return f.get(obj).toString();
-		} catch (NoSuchFieldException | SecurityException
-				| IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		*/
+		 * Field f = null; try { f = obj.getClass().getDeclaredField(field);
+		 * f.setAccessible(true); if (f.get(obj) == null) return "null"; return
+		 * f.get(obj).toString(); } catch (NoSuchFieldException |
+		 * SecurityException | IllegalArgumentException | IllegalAccessException
+		 * e) { e.printStackTrace(); }
+		 */
 		return "null";
 	}
 
 	public void setField(String field, String value) {
 		Field f = null;
-		if(this.getObj() == null){
+		if (this.getObj() == null) {
 			CallStack cs = DebuggerCLI.getCallStack().peek();
 			try {
 				f = cs.className.getClass().getDeclaredField(field);
@@ -122,7 +143,7 @@ public class InspectionObject {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}else{
+		} else {
 			try {
 				f = obj.getClass().getDeclaredField(field);
 			} catch (NoSuchFieldException | SecurityException e) {
@@ -137,15 +158,15 @@ public class InspectionObject {
 	}
 
 	public void printFields() {
-		
+
 		Field[] fields = null;
-		if(this.getObj() == null){
+		if (this.getObj() == null) {
 			CallStack cs = DebuggerCLI.getCallStack().peek();
 			fields = ((Class<?>) cs.className).getDeclaredFields();
-		}else{
+		} else {
 			fields = obj.getClass().getDeclaredFields();
 		}
-		
+
 		System.out.print("       Fields: ");
 		String formatOutput = "";
 		for (Field f : fields) {
