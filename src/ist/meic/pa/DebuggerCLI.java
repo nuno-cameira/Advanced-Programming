@@ -196,34 +196,8 @@ public class DebuggerCLI {
 
 	private static Object processReturn(String argument) {
 		Method m = getMethodSafe();
-/*		String methodName = callStack.peek().methodName;
 
-		if (lastObj.getObj() == null) {
-			try {
-				CallStack cs = callStack.peek();
-				Class<?> c = (Class<?>) cs.className;
-				m = c.getMethod(methodName,
-						DebuggerCLI.getClassesOfMethodArgs(cs));
-			} catch (NoSuchMethodException | SecurityException e) {
-				e.printStackTrace();
-			}
-		} else {
-			try {
-				m = lastObj
-						.getObj()
-						.getClass()
-						.getMethod(methodName,
-								getClassesOfMethodArgs(callStack.peek()));
-			} catch (NoSuchMethodException | SecurityException e) {
-				e.printStackTrace();
-			}
-		}
-		*/
 		if (m != null) {
-			//m.setAccessible(true);
-			System.out.println("Return -> method type"
-					+ FieldFactory.getType(argument,
-							m.getReturnType().getName()).getClass());
 			callStack.pop();
 			return FieldFactory.getType(argument, m.getReturnType().getName());
 		}else{

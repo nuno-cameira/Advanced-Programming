@@ -43,7 +43,7 @@ public class MyTranslator implements Translator {
 
 							m.replace("{  ist.meic.pa.DebuggerCLI.setLastObj($0); ist.meic.pa.DebuggerCLI.addToStack($class,\""
 									+ name
-									+ "\", $args); Object o = ist.meic.pa.DebuggerCLI.run(); if(o instanceof Exception){throw (Throwable)o; } else { $_ = ($r)o; } }");
+									+ "\", $args); Object o = ist.meic.pa.DebuggerCLI.run(); if(o instanceof Exception){ System.out.println(\"->Exception\");throw (Throwable)o; } else { System.out.println(\"->\"\""+name+"\"+\" \"+($r)o); $_ = ($r)o; } }");
 						}
 					} catch (NotFoundException e) {
 						e.printStackTrace();
