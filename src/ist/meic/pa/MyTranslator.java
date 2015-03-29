@@ -1,18 +1,12 @@
 package ist.meic.pa;
 
-import java.io.IOException;
-
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.CtField;
 import javassist.CtMethod;
-import javassist.CtNewMethod;
-import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.Translator;
 import javassist.expr.ExprEditor;
-import javassist.expr.Handler;
 import javassist.expr.MethodCall;
 
 public class MyTranslator implements Translator {
@@ -41,22 +35,36 @@ public class MyTranslator implements Translator {
 									+ m.getMethodName());
 							String name = m.getMethodName();
 
-							m.replace("{  ist.meic.pa.DebuggerCLI.setLastObj($0); ist.meic.pa.DebuggerCLI.addToStack($class,\""
-									+ name
-									+ "\", $args); Object o = ist.meic.pa.DebuggerCLI.run(); if(o instanceof Exception){ System.out.println(\"->Exception\");throw (Throwable)o; } else { System.out.println(\"->\"\""+name+"\"+\" \"+($r)o); $_ = ($r)o; } }");
+							m.replace("{  ist.meic.pa.DebuggerCLI.setLastObj($0); "
+									+ "   ist.meic.pa.DebuggerCLI.addToStack($class,\""+ name + "\", $args); "
+//									+ "   System.out.println(\""+ name + "\");"
+									+ "   Object o = ist.meic.pa.DebuggerCLI.run(); "
+									+ "   if(o instanceof Exception) { "
+//									+ "      System.out.println(\"->EXCEPTION\"); "
+//									+ "      if(\""+ name + "\".equals(\"main\")) {"
+									
+//									+ "      } else {"
+									+ "      	 throw (Throwable)o; "
+//									+ "      }"
+									+ "   } "
+									+ "   else {"
+//									+ "      System.out.println(\"->\"\""+name+"\"+\" \"+($r)o);"
+									+ "      $_ = ($r)o;"
+									+ "   } "
+									+ "}");
 						}
 					} catch (NotFoundException e) {
 						e.printStackTrace();
 					}
 				}
 			});
-			/*
+		/*	
 			ctm.instrument(new ExprEditor() {
 				public void edit(Handler h) throws CannotCompileException {
 					String packageName = h.getEnclosingClass().getPackageName();
-					
+//					System.out.println(packageName);
 					if (packageName.equals("test")) {
-						h.insertBefore("{System.out.println(\"catch\"+$type); throw $1;}");
+						h.insertBefore("{System.out.println(\"HANDLER CATCH \"+$1); }");
 					}
 				}
 			});

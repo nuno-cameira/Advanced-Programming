@@ -10,7 +10,6 @@ class B {
 
 	public double baz(Object x) {
 		System.out.println("Inside B.baz");
-		System.out.flush();
 		System.out.println(x.toString());
 		return b;
 	}

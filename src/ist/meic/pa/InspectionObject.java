@@ -18,22 +18,18 @@ public class InspectionObject {
 
 	public InspectionObject(Object o) {
 		this.obj = o;
-	}
-
-	
+	}	
 	
 	public Object invokeMethodOnStack() throws NoSuchMethodException,
 			SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
 		
-
 		CallStack cs = DebuggerCLI.getCallStack().peek();
 		String methodName = cs.methodName;
-		//System.out.println(cs.methodArgs.length);
-		//System.out.println(cs.methodArgs[0]);
-		if (cs.methodArgs[0]==null) { // TODO cleanup
+
+		// check if arguments to method were null
+		if (cs.methodArgs[0]==null) { 
 			if (this.obj != null) {
-				System.out.println("OH NOES.. method args is null");
 				Method[] methods = this.obj.getClass().getMethods();
 				for(Method m: methods){
 					if(m.getName().equals(cs.methodName)){
@@ -52,7 +48,6 @@ public class InspectionObject {
 						Object o = m.invoke(this.obj, cs.methodArgs);
 						DebuggerCLI.getCallStack().pop();
 						return o;
-						//return m.invoke(this.obj, cs.methodArgs);
 					}
 				}			
 			}
@@ -66,7 +61,6 @@ public class InspectionObject {
 			Object o = m.invoke(this.obj, cs.methodArgs);
 			DebuggerCLI.getCallStack().pop();
 			return o;
-			//return m.invoke(this.obj, cs.methodArgs);
 		} else {
 			Class<?> c = (Class<?>) cs.className;
 			Method m = c.getMethod(methodName, args);
@@ -74,18 +68,14 @@ public class InspectionObject {
 			Object o = m.invoke(this.obj, cs.methodArgs);
 			DebuggerCLI.getCallStack().pop();
 			return o;
-			//return m.invoke(null, cs.methodArgs);
 		}
 	}
 
-	public void printDetails() {
-
+	public void printInfo() {
 		if (this.obj != null) {
-			System.out.println("Called Object: " + obj.toString());
-		} else {
-			String classname = DebuggerCLI.getCallStack().peek().className
-					.toString();
-			System.out.println("Called Object: static " + classname);
+			System.out.println("Called Object:  " + obj.toString());
+		} else { 
+			System.out.println("Called Object:  null");
 		}
 		printFields();
 	}
@@ -136,13 +126,6 @@ public class InspectionObject {
 				e.printStackTrace();
 			}
 		}
-		/*
-		 * Field f = null; try { f = obj.getClass().getDeclaredField(field);
-		 * f.setAccessible(true); if (f.get(obj) == null) return "null"; return
-		 * f.get(obj).toString(); } catch (NoSuchFieldException |
-		 * SecurityException | IllegalArgumentException | IllegalAccessException
-		 * e) { e.printStackTrace(); }
-		 */
 		return "null";
 	}
 
@@ -153,14 +136,12 @@ public class InspectionObject {
 			try {
 				f = cs.className.getClass().getDeclaredField(field);
 			} catch (NoSuchFieldException | SecurityException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else {
 			try {
 				f = obj.getClass().getDeclaredField(field);
 			} catch (NoSuchFieldException | SecurityException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -180,7 +161,7 @@ public class InspectionObject {
 			fields = obj.getClass().getDeclaredFields();
 		}
 
-		System.out.print("       Fields: ");
+		System.out.print("       Fields:  ");
 		String formatOutput = "";
 		for (Field f : fields) {
 			try {

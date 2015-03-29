@@ -24,7 +24,7 @@ public class DebuggerCLI {
 
 	static class CallStack {
 
-		Object className;
+		public Object className;
 		String methodName;
 		Object[] methodArgs;
 
@@ -113,7 +113,7 @@ public class DebuggerCLI {
 		while (!command.equals("Abort")) {
 			switch (command) {
 			case "Info":
-				DebuggerCLI.lastObj.printDetails();
+				DebuggerCLI.lastObj.printInfo();
 				printCallStack();
 				break;
 			case "Throw":
@@ -154,7 +154,6 @@ public class DebuggerCLI {
 		Object last = DebuggerCLI.lastObj.getObj();
 		if (cs.methodArgs[0] == null) { // TODO cleanup
 			if (last != null) {
-				System.out.println("OH NOES.. method args is null");
 				Method[] methods = last.getClass().getMethods();
 				for (Method m : methods) {
 					if (m.getName().equals(cs.methodName)) {
@@ -163,7 +162,6 @@ public class DebuggerCLI {
 					}
 				}
 			} else {
-				System.out.println("OH NOES.. method args is null");
 				Class<?> c = (Class<?>) cs.className;
 				Method[] methods = c.getMethods();
 				for (Method m : methods) {
