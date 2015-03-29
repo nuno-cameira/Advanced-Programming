@@ -11,6 +11,7 @@ class B {
 	public double baz(Object x) {
 		System.out.println("Inside B.baz");
 		System.out.println(x.toString());
+		System.out.println("Inside B.baz and after toString");
 		return b;
 	}
 }

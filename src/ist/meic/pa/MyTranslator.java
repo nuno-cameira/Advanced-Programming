@@ -30,7 +30,7 @@ public class MyTranslator implements Translator {
 								.getPackageName();
 						//System.out.println("  Tried to instrument "+m.getMethodName()+packageName);
 
-						if (packageName.equals("test") || m.getMethodName().equals("parseInt")) {
+						if (packageName.equals("test") || m.getMethodName().equals("parseInt") || m.getMethodName().equals("toString")) {
 							System.out.println("  Instrumented "
 									+ m.getMethodName());
 							String name = m.getMethodName();
@@ -44,7 +44,7 @@ public class MyTranslator implements Translator {
 //									+ "      if(\""+ name + "\".equals(\"main\")) {"
 									
 //									+ "      } else {"
-									+ "      	 throw (Throwable)o; "
+									+ "      	throw (Throwable)o; "
 //									+ "      }"
 									+ "   } "
 									+ "   else {"

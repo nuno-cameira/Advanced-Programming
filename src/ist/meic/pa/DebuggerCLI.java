@@ -2,7 +2,6 @@ package ist.meic.pa;
 
 import ist.meic.pa.fields.FieldFactory;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ import java.util.Stack;
 
 import javassist.ClassPool;
 import javassist.Loader;
-import javassist.Translator;
 
 public class DebuggerCLI {
 
@@ -97,9 +95,16 @@ public class DebuggerCLI {
 
 		} catch (IllegalArgumentException | SecurityException
 				| NoSuchMethodException | IllegalAccessException
-				| InvocationTargetException e) {
+				| InvocationTargetException | NullPointerException e) {
 			System.out.println(e.getCause());
 			setThrownException(e.getCause());
+			System.out.println("NORMAL STACK TRACE");
+			//e.printStackTrace();
+			return startShell();
+		}
+		catch (Exception e) {
+			System.out.println("GENERIC STACK TRACE");
+			e.printStackTrace();
 			return startShell();
 		}
 	}
@@ -152,7 +157,7 @@ public class DebuggerCLI {
 		String methodName = cs.methodName;
 
 		Object last = DebuggerCLI.lastObj.getObj();
-		if (cs.methodArgs[0] == null) { // TODO cleanup
+		if (cs.methodArgs.length>=1 && cs.methodArgs[0] == null) { // TODO cleanup
 			if (last != null) {
 				Method[] methods = last.getClass().getMethods();
 				for (Method m : methods) {
@@ -178,12 +183,21 @@ public class DebuggerCLI {
 		Method m = null;
 		try {
 			if (last != null) {
-				m = last.getClass().getMethod(methodName, args);
+				if(args==null){
+					m = last.getClass().getMethod(methodName);
+				}
+				else {
+					m = last.getClass().getMethod(methodName, args);}
 				m.setAccessible(true);
 				return m;
 			} else {
 				Class<?> c = (Class<?>) cs.className;
+				if(args==null){
+					m = c.getClass().getMethod(methodName);
+				}
+				else {
 				m = c.getMethod(methodName, args);
+				}
 				m.setAccessible(true);
 				return m;
 			}
@@ -194,14 +208,29 @@ public class DebuggerCLI {
 	}
 
 	private static Object processReturn(String argument) {
+		if(lastObj.getObj()==null){
+			System.out.println("processReturn -> obj is null");
+		Class<?> c = (Class<?>) callStack.peek().className;
+		try {
+			Object o = c.newInstance();
+			setLastObj(o);
+			System.out.println("processReturn -> new obj"+lastObj.getObj());
+		} catch (InstantiationException | IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		}
+		
 		Method m = getMethodSafe();
 
 		if (m != null) {
 			callStack.pop();
-			return FieldFactory.getType(argument, m.getReturnType().getName());
+			//System.out.println("processReturn -> returnType: "+ m.getReturnType().getSimpleName());
+			//return FieldFactory.getType(argument, m.getReturnType().getName());
+			return FieldFactory.getType(argument, m.getReturnType().getSimpleName());
 		}else{
 			System.out.println("problem.. method not found");
-			//callStack.pop();
+			callStack.pop();
 			return m;
 		}
 
@@ -219,11 +248,17 @@ public class DebuggerCLI {
 
 		try {
 			DebuggerCLI.lastObj.invokeMethodOnStack();
+			System.out.println("DONE RETRY");
 		} catch (IllegalArgumentException | SecurityException
 				| NoSuchMethodException | IllegalAccessException
 				| InvocationTargetException e) {
 			DebuggerCLI.setThrownException(e);
 			System.out.println(e.getCause());
+			e.printStackTrace();
+		}
+		catch (Exception e){
+			System.out.println("WHUUT");
+			e.printStackTrace();
 		}
 	}
 
@@ -231,7 +266,15 @@ public class DebuggerCLI {
 		ArrayList<Class<?>> argsTemp = new ArrayList<Class<?>>();
 
 		// builds an ArrayList with the argument's type for that method
+		if(cs.methodArgs.length==0){
+			return null;
+		}
 		for (Object o : cs.methodArgs) {
+			if(o==null){
+				//argsTemp.add(null);
+				return null;
+			}
+			else {
 			Class<?> cc = null;
 			if (Unwrapper.isWrapperType(o.getClass())) {
 				cc = Unwrapper.unwrap(o.getClass());
@@ -239,6 +282,7 @@ public class DebuggerCLI {
 				cc = o.getClass();
 			}
 			argsTemp.add(cc);
+			}
 		}
 
 		// converts ArrayList to a simple array
@@ -273,6 +317,7 @@ public class DebuggerCLI {
 			setLastObj(Class.forName(classname));
 			loader.run(classname, arguments);
 		} catch (Throwable e) {
+			System.out.println("MAIN EXCEPTION");
 			System.out.println(e.getCause());
 			e.printStackTrace();
 		}

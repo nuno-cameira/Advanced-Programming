@@ -28,7 +28,7 @@ public class InspectionObject {
 		String methodName = cs.methodName;
 
 		// check if arguments to method were null
-		if (cs.methodArgs[0]==null) { 
+		if (cs.methodArgs.length>=1 && cs.methodArgs[0]==null) { 
 			if (this.obj != null) {
 				Method[] methods = this.obj.getClass().getMethods();
 				for(Method m: methods){
