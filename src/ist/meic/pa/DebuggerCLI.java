@@ -84,12 +84,12 @@ public class DebuggerCLI {
 	}
 
 	public static Object run() {
-		Object o = null;
 		try {
-			o = DebuggerCLI.lastObj.invokeMethodOnStack();
+			return DebuggerCLI.lastObj.invokeMethodOnStack();
+			/*
 			if(o != null && o instanceof Exception){
 				return startShell();
-			}
+			}*/
 
 		} catch (IllegalArgumentException
 				| SecurityException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -97,8 +97,6 @@ public class DebuggerCLI {
 			setThrownException(e.getCause());
 			return startShell();
 		}
-
-		return o;
 	}
 
 	public static Object startShell() {
@@ -194,6 +192,7 @@ public class DebuggerCLI {
 			DebuggerCLI.lastObj.invokeMethodOnStack();
 		} catch (IllegalArgumentException | SecurityException
 				| NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+			DebuggerCLI.setThrownException(e);
 			System.out.println(e.getCause());
 		}
 	}
@@ -221,6 +220,11 @@ public class DebuggerCLI {
 	public static void main(String[] args) {
 
 		String classname = args[0];
+		String[] arguments = new String[args.length-1];
+
+		for(int i = 0; i < args.length-1; i++){
+			arguments[i] = args[i+1];
+		}
 
 		// Translator translator = new MyTranslator();
 		ClassPool pool = ClassPool.getDefault();
@@ -237,8 +241,9 @@ public class DebuggerCLI {
 			//
 			callStack.push(new DebuggerCLI.CallStack(o, "main", obs));
 			setLastObj(Class.forName(classname).newInstance());
-			loader.run(classname, args);
+			loader.run(classname, arguments);
 		} catch (Throwable e) {
+			System.out.println(e.getCause());
 			e.printStackTrace();
 		}
 	}
