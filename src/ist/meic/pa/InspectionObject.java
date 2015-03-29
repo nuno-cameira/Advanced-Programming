@@ -25,6 +25,8 @@ public class InspectionObject {
 	public Object invokeMethodOnStack() throws NoSuchMethodException,
 			SecurityException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException {
+		
+
 		CallStack cs = DebuggerCLI.getCallStack().peek();
 		String methodName = cs.methodName;
 		//System.out.println(cs.methodArgs.length);
@@ -36,32 +38,43 @@ public class InspectionObject {
 				for(Method m: methods){
 					if(m.getName().equals(cs.methodName)){
 						m.setAccessible(true);
-						return m.invoke(this.obj, cs.methodArgs);
+						Object o = m.invoke(this.obj, cs.methodArgs);
+						DebuggerCLI.getCallStack().pop(); // if there is no exception thrown on invoke.. pop the method from the call stack
+						return o;
 					}
 				}
 			}else{
-				System.out.println("OH NOES.. method args is null");
 				Class<?> c = (Class<?>) cs.className;
 				Method[] methods = c.getMethods();
 				for(Method m: methods){
 					if(m.getName().equals(cs.methodName)){
 						m.setAccessible(true);
-						return m.invoke(this.obj, cs.methodArgs);
+						Object o = m.invoke(this.obj, cs.methodArgs);
+						DebuggerCLI.getCallStack().pop();
+						return o;
+						//return m.invoke(this.obj, cs.methodArgs);
 					}
 				}			
 			}
 		}
+		
 		Class<?>[] args = DebuggerCLI.getClassesOfMethodArgs(cs);
 
 		if (this.obj != null) {
 			Method m = this.obj.getClass().getMethod(methodName, args);
 			m.setAccessible(true);
-			return m.invoke(this.obj, cs.methodArgs);
+			Object o = m.invoke(this.obj, cs.methodArgs);
+			DebuggerCLI.getCallStack().pop();
+			return o;
+			//return m.invoke(this.obj, cs.methodArgs);
 		} else {
 			Class<?> c = (Class<?>) cs.className;
 			Method m = c.getMethod(methodName, args);
 			m.setAccessible(true);
-			return m.invoke(null, cs.methodArgs);
+			Object o = m.invoke(this.obj, cs.methodArgs);
+			DebuggerCLI.getCallStack().pop();
+			return o;
+			//return m.invoke(null, cs.methodArgs);
 		}
 	}
 

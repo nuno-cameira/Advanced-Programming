@@ -135,6 +135,7 @@ public class DebuggerCLI {
 				break;
 			case "Retry":
 				processRetry();
+				
 				break;
 			default:
 				System.out.println("Unknown command");
