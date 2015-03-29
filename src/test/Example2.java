@@ -26,7 +26,7 @@ public class Example2 {
 			try {
 				System.out.println(fact(bar(arg)));
 			} catch(RuntimeException re) {
-				re.printStackTrace();
+				//re.printStackTrace();
 				System.out.println("Exception caught!");
 			}
 		}

@@ -19,12 +19,10 @@ public class DebuggerCLI {
 	private static Scanner scanner = new Scanner(System.in);
 	private static InspectionObject lastObj = null;
 	private static Stack<CallStack> callStack = new Stack<CallStack>();
-	
+
 	private static Throwable thrownException = null;
 
-	// private static boolean canExecute = true;
-
-	private static class CallStack {
+	static class CallStack {
 
 		Object className;
 		String methodName;
@@ -36,26 +34,27 @@ public class DebuggerCLI {
 			this.methodName = methodName;
 			this.methodArgs = methodArgs;
 		}
-
 	}
-	
-	
-	public static void printArgs(Object[] methodArgs){
+
+	public static Stack<CallStack> getCallStack() {
+		return callStack;
+	}
+
+	public static void printArgs(Object[] methodArgs) {
 		for (Object o : methodArgs) {
 			System.out.println("ARGUMENTS" + o);
 		}
 	}
 
-	public static void addToStack(String methodName, Object[] methodArgs) {
-
-		System.out.println("Add to stack ->  " + methodName);
-		for (Object o : methodArgs) {
-			System.out.println("Add to stack -> for ->" + o);
+	public static void addToStack(Object classname, String methodName,
+			Object[] methodArgs) {
+		if (lastObj.getObj() != null) {
+			callStack.push(new DebuggerCLI.CallStack(lastObj.getObj(),
+					methodName, methodArgs));
+		} else {
+			callStack.push(new DebuggerCLI.CallStack(classname, methodName,
+					methodArgs));
 		}
-
-		// System.out.println("OO "+lastObj.getObj().getClass().getName());
-		callStack.push(new DebuggerCLI.CallStack(lastObj.getObj(), methodName,
-				methodArgs));
 	}
 
 	public static void printCallStack() {
@@ -81,55 +80,28 @@ public class DebuggerCLI {
 	}
 
 	public static void setLastObj(Object lastObj) {
-		// System.out.println("setLastObj");
-		// System.out.println("OBJ "+lastObj);
 		DebuggerCLI.lastObj = new InspectionObject(lastObj);
 	}
 
 	public static Object run() {
-		String methodName = callStack.peek().methodName;
-		System.out.println("Debugger -> run -> " + methodName);
-
-		CallStack cs = callStack.peek();
-
-		Class<?>[] args = getClassesOfMethodArgs(cs);
-		for (Class<?> c : args) {
-			System.out.println("Debugger -> run -> for" + c.getName());
-		}
-
+		Object o = null;
 		try {
-
-			Method m = lastObj.getObj().getClass().getMethod(methodName, args);
-			m.setAccessible(true);
-			for(Object o : callStack.peek().methodArgs){
-				System.out.println("CENA s"+o.getClass());
+			o = DebuggerCLI.lastObj.invokeMethodOnStack();
+			if(o != null && o instanceof Exception){
+				return startShell();
 			}
-			return m.invoke(lastObj.getObj(), callStack.peek().methodArgs);
-		} catch (IllegalAccessException | IllegalArgumentException
-				| NoSuchMethodException | SecurityException
-				| InvocationTargetException e) {
-			//System.out.println(e);
-			System.out.println(e.getCause());
-			thrownException = e.getCause();
-			//e.printStackTrace();
-			return startShell();
 
+		} catch (IllegalArgumentException
+				| SecurityException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+			System.out.println(e.getCause());
+			setThrownException(e.getCause());
+			return startShell();
 		}
+
+		return o;
 	}
 
 	public static Object startShell() {
-
-		/*
-		 * System.out.println("canExecute "+canExecute); if(canExecute==false){
-		 * System.out.println("IN IF " + canExecute); canExecute=true; //return;
-		 * }
-		 */
-
-		// System.out.println(new
-		// Exception().getStackTrace()[0].getMethodName());
-		// System.out.println(new
-		// Exception().getStackTrace()[0].getClassName());
-
 		System.out.print("DebuggerCLI:> ");
 		String command = scanner.next();
 		String argument = "";
@@ -138,64 +110,17 @@ public class DebuggerCLI {
 		while (!command.equals("Abort")) {
 			switch (command) {
 			case "Info":
-				System.out.println("execute Info: ");
 				DebuggerCLI.lastObj.printDetails();
 				printCallStack();
 				break;
 			case "Throw":
-				System.out.println("execute Throw: ");
 				callStack.pop();
 				CallStack c = callStack.peek();
 				setLastObj(c.className);
-				return thrownException;
+				return getThrownException();
 			case "Return":
 				argument = scanner.next();
-				System.out.println("execute Return: " + argument);
-				String methodName = callStack.peek().methodName;
-				
-				
-
-				
-				Method m;
-				try {
-					m = lastObj.getObj().getClass()
-							.getMethod(methodName, getClassesOfMethodArgs(callStack.peek()));
-					m.setAccessible(true);
-					System.out.println("Return -> method type" + FieldFactory.getType(argument, m.getReturnType().getName()).getClass());
-					return FieldFactory.getType(argument, m.getReturnType().getName());
-				} catch (NoSuchMethodException | SecurityException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				
-				
-					
-					
-					/*System.out.println("CENA");
-					Field f = lastObj.getObj().getClass().getField("doIReturn");
-					f.setAccessible(true);
-					f.set(lastObj.getObj(), true);
-					return m.invoke(lastObj.getObj(),
-							Double.parseDouble(argument));
-					// System.out.println("CENA1");
-				} catch (IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (NoSuchMethodException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (SecurityException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (NoSuchFieldException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} finally {/* canExecute=false;
-					System.out.println("FINALLY");
-				}*/
-				break;
+				return processReturn(argument);
 			case "Get":
 				argument = scanner.next();
 				processGet(argument);
@@ -218,52 +143,66 @@ public class DebuggerCLI {
 		return null;
 	}
 
+	private static Object processReturn(String argument) {
+		String methodName = callStack.peek().methodName;
+		Method m = null;
+
+		if (lastObj.getObj() == null) {
+			try {
+				CallStack cs = callStack.peek();
+				Class<?> c = (Class<?>) cs.className;
+				m = c.getMethod(methodName,
+						DebuggerCLI.getClassesOfMethodArgs(cs));
+			} catch (NoSuchMethodException | SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				m = lastObj
+						.getObj()
+						.getClass()
+						.getMethod(methodName,
+								getClassesOfMethodArgs(callStack.peek()));
+			} catch (NoSuchMethodException | SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(m!=null){
+		m.setAccessible(true);
+		System.out.println("Return -> method type"
+				+ FieldFactory.getType(argument, m.getReturnType().getName())
+						.getClass());
+		callStack.pop();
+		return FieldFactory.getType(argument, m.getReturnType().getName());
+		}
+		return m;
+	}
+
 	private static void processGet(String argument) {
-		// System.out.println("execute Get: " + argument);
 		System.out.println(DebuggerCLI.lastObj.getField(argument));
 	}
 
 	private static void processSet(String field, String value) {
-		System.out.println("execute Set: " + field + " " + value);
 		DebuggerCLI.lastObj.setField(field, value);
 	}
 
 	private static void processRetry() {
-		System.out.println("execute Retry:");
-
-		CallStack cs = callStack.peek();
-		String methodName = cs.methodName;
-		//callStack.pop();
-		System.out.println("MM "+methodName);
-
-		Class<?>[] args = getClassesOfMethodArgs(cs);
 
 		try {
-			/*
-			 * System.out.println("--------"); for(Method m :
-			 * lastObj.getObj().getClass() .getDeclaredMethods()){
-			 * System.out.println(m); }
-			 */
-			
-			Method m = lastObj.getObj().getClass()
-					.getDeclaredMethod(methodName, args);
-			m.setAccessible(true);
-			m.invoke(lastObj.getObj(), cs.methodArgs);
-		} catch (IllegalAccessException | IllegalArgumentException
-				| NoSuchMethodException | SecurityException
-				| InvocationTargetException e) {
-			//System.out.println(e);
+			DebuggerCLI.lastObj.invokeMethodOnStack();
+		} catch (IllegalArgumentException | SecurityException
+				| NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
 			System.out.println(e.getCause());
 		}
 	}
 
-	private static Class<?>[] getClassesOfMethodArgs(CallStack cs) {
+	public static Class<?>[] getClassesOfMethodArgs(CallStack cs) {
 		ArrayList<Class<?>> argsTemp = new ArrayList<Class<?>>();
 
 		// builds an ArrayList with the argument's type for that method
 		for (Object o : cs.methodArgs) {
-			System.out.println(".getClassesOfMethodArgs..." + o);
-			// System.out.println("ProcessRetry -> " +o);
 			Class<?> cc = null;
 			if (Unwrapper.isWrapperType(o.getClass())) {
 				cc = Unwrapper.unwrap(o.getClass());
@@ -283,7 +222,7 @@ public class DebuggerCLI {
 
 		String classname = args[0];
 
-		//Translator translator = new MyTranslator();
+		// Translator translator = new MyTranslator();
 		ClassPool pool = ClassPool.getDefault();
 		Loader loader = new Loader();
 		// VERY IMPORTANT LINE
@@ -302,5 +241,13 @@ public class DebuggerCLI {
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static Throwable getThrownException() {
+		return thrownException;
+	}
+
+	public static void setThrownException(Throwable thrownException) {
+		DebuggerCLI.thrownException = thrownException;
 	}
 }
