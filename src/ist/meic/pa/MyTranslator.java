@@ -48,7 +48,7 @@ public class MyTranslator implements Translator {
 //									+ "      }"
 									+ "   } "
 									+ "   else {"
-//									+ "      System.out.println(\"->\"\""+name+"\"+\" \"+($r)o);"
+									+ "      System.out.println(\"->\"\""+name+"\"+\" \"+($r)o);"
 									+ "      $_ = ($r)o;"
 									+ "   } "
 									+ "}");

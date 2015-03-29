@@ -19,7 +19,7 @@ public class DebuggerCLI {
 	private static Scanner scanner = new Scanner(System.in);
 	private static InspectionObject lastObj = null;
 	private static Stack<CallStack> callStack = new Stack<CallStack>();
-
+	public static boolean retry = false;
 	private static Throwable thrownException = null;
 
 	static class CallStack {
@@ -89,12 +89,34 @@ public class DebuggerCLI {
 	}
 
 	public static Object run() {
+		Object ret = null;
 		try {
 			return DebuggerCLI.lastObj.invokeMethodOnStack();
-			/*
-			 * if(o != null && o instanceof Exception){ return startShell(); }
-			 */
-
+		} catch (IllegalArgumentException | SecurityException
+				| NoSuchMethodException | IllegalAccessException
+				| InvocationTargetException e) {
+			System.out.println(e.getCause());
+			setThrownException(e.getCause());
+		}
+		while(true){
+		  ret = startShell();
+		  if(ret.equals("retry")){
+		    try{
+		      return DebuggerCLI.lastObj.invokeMethodOnStack();
+		    }catch (IllegalArgumentException | SecurityException
+					| NoSuchMethodException | IllegalAccessException
+					| InvocationTargetException e) {
+				System.out.println(e.getCause());
+				setThrownException(e.getCause());
+			}
+		  }else{
+		    return ret;
+		  }
+		}
+		
+		/*
+		try {
+			return DebuggerCLI.lastObj.invokeMethodOnStack();
 		} catch (IllegalArgumentException | SecurityException
 				| NoSuchMethodException | IllegalAccessException
 				| InvocationTargetException e) {
@@ -102,6 +124,21 @@ public class DebuggerCLI {
 			setThrownException(e.getCause());
 			return startShell();
 		}
+		*/
+	}
+	
+	public static void retryRun() {
+		//run();
+		/*
+		try {
+			DebuggerCLI.lastObj.invokeMethodOnStack();
+		} catch (IllegalArgumentException | SecurityException
+				| NoSuchMethodException | IllegalAccessException
+				| InvocationTargetException e) {
+			System.out.println(e.getCause());
+			setThrownException(e.getCause());
+		}
+		*/
 	}
 
 	public static Object startShell() {
@@ -134,9 +171,8 @@ public class DebuggerCLI {
 				processSet(argument, value);
 				break;
 			case "Retry":
-				processRetry();
-				
-				break;
+				//processRetry();
+				return "retry";
 			default:
 				System.out.println("Unknown command");
 			}
@@ -195,7 +231,6 @@ public class DebuggerCLI {
 
 	private static Object processReturn(String argument) {
 		Method m = getMethodSafe();
-
 		if (m != null) {
 			callStack.pop();
 			return FieldFactory.getType(argument, m.getReturnType().getName());
@@ -225,6 +260,8 @@ public class DebuggerCLI {
 			DebuggerCLI.setThrownException(e);
 			System.out.println(e.getCause());
 		}
+		System.out.println("AFTER RETRY");
+
 	}
 
 	public static Class<?>[] getClassesOfMethodArgs(CallStack cs) {
