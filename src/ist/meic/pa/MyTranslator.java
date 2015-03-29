@@ -36,7 +36,7 @@ public class MyTranslator implements Translator {
 								.getPackageName();
 						//System.out.println("  Tried to instrument "+m.getMethodName()+packageName);
 
-						if (!packageName.equals("javassist") && (packageName.equals("test") || m.getMethodName().equals("parseInt"))) {
+						if (packageName.equals("test") || m.getMethodName().equals("parseInt")) {
 							System.out.println("  Instrumented "
 									+ m.getMethodName());
 							String name = m.getMethodName();

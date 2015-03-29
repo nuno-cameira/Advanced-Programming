@@ -68,8 +68,13 @@ public class DebuggerCLI {
 		stampTemp2 = (Stack<CallStack>) stampTemp;
 		while (!stampTemp2.empty()) {
 			CallStack cs = stampTemp2.pop();
-			System.out.print(cs.className.getClass().getName() + "."
-					+ cs.methodName + "(");
+			if (cs.className instanceof Class<?>) {
+				Class<?> c = (Class<?>) cs.className;
+				System.out.print(c.getName() + "." + cs.methodName + "(");
+			} else {
+				System.out.print(cs.className.getClass().getName() + "."
+						+ cs.methodName + "(");
+			}
 			for (Object o : cs.methodArgs) {
 				System.out.print(formatOutput + o);
 				formatOutput = ", ";
@@ -87,12 +92,12 @@ public class DebuggerCLI {
 		try {
 			return DebuggerCLI.lastObj.invokeMethodOnStack();
 			/*
-			if(o != null && o instanceof Exception){
-				return startShell();
-			}*/
+			 * if(o != null && o instanceof Exception){ return startShell(); }
+			 */
 
-		} catch (IllegalArgumentException
-				| SecurityException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+		} catch (IllegalArgumentException | SecurityException
+				| NoSuchMethodException | IllegalAccessException
+				| InvocationTargetException e) {
 			System.out.println(e.getCause());
 			setThrownException(e.getCause());
 			return startShell();
@@ -152,7 +157,6 @@ public class DebuggerCLI {
 				m = c.getMethod(methodName,
 						DebuggerCLI.getClassesOfMethodArgs(cs));
 			} catch (NoSuchMethodException | SecurityException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else {
@@ -163,18 +167,18 @@ public class DebuggerCLI {
 						.getMethod(methodName,
 								getClassesOfMethodArgs(callStack.peek()));
 			} catch (NoSuchMethodException | SecurityException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		if(m!=null){
-		m.setAccessible(true);
-		System.out.println("Return -> method type"
-				+ FieldFactory.getType(argument, m.getReturnType().getName())
-						.getClass());
-		callStack.pop();
-		return FieldFactory.getType(argument, m.getReturnType().getName());
+		if (m != null) {
+			m.setAccessible(true);
+			System.out.println("Return -> method type"
+					+ FieldFactory.getType(argument,
+							m.getReturnType().getName()).getClass());
+			callStack.pop();
+			return FieldFactory.getType(argument, m.getReturnType().getName());
 		}
+		callStack.pop();
 		return m;
 	}
 
@@ -191,7 +195,8 @@ public class DebuggerCLI {
 		try {
 			DebuggerCLI.lastObj.invokeMethodOnStack();
 		} catch (IllegalArgumentException | SecurityException
-				| NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+				| NoSuchMethodException | IllegalAccessException
+				| InvocationTargetException e) {
 			DebuggerCLI.setThrownException(e);
 			System.out.println(e.getCause());
 		}
@@ -220,10 +225,10 @@ public class DebuggerCLI {
 	public static void main(String[] args) {
 
 		String classname = args[0];
-		String[] arguments = new String[args.length-1];
+		String[] arguments = new String[args.length - 1];
 
-		for(int i = 0; i < args.length-1; i++){
-			arguments[i] = args[i+1];
+		for (int i = 0; i < args.length - 1; i++) {
+			arguments[i] = args[i + 1];
 		}
 
 		// Translator translator = new MyTranslator();
@@ -240,7 +245,7 @@ public class DebuggerCLI {
 			Object[] obs = { classname };
 			//
 			callStack.push(new DebuggerCLI.CallStack(o, "main", obs));
-			setLastObj(Class.forName(classname).newInstance());
+			setLastObj(Class.forName(classname));
 			loader.run(classname, arguments);
 		} catch (Throwable e) {
 			System.out.println(e.getCause());
