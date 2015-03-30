@@ -18,7 +18,6 @@ public class DebuggerCLI {
 	private static Scanner scanner = new Scanner(System.in);
 	private static InspectionObject lastObj = null;
 	private static Stack<CallStack> callStack = new Stack<CallStack>();
-	public static boolean retry = false;
 	private static Throwable thrownException = null;
 
 	static class CallStack {
@@ -93,6 +92,7 @@ public class DebuggerCLI {
 				| NoSuchMethodException | IllegalAccessException
 				| InvocationTargetException e) {
 			System.out.println(e.getCause());
+			
 			setThrownException(e.getCause());
 		}
 		

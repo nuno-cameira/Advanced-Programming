@@ -91,18 +91,17 @@ public class InspectionObject {
 					if (f.get(obj) == null)
 						return "null";
 				} catch (IllegalArgumentException | IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					System.out.println("");
 				}
 				try {
 					return f.get(obj).toString();
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					System.out.println("");
 				}
 			} catch (NoSuchFieldException | SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("No such field.");
 			}
 		} else {
 			try {
@@ -136,13 +135,18 @@ public class InspectionObject {
 			try {
 				f = cs.className.getClass().getDeclaredField(field);
 			} catch (NoSuchFieldException | SecurityException e) {
-				e.printStackTrace();
+				//System.out.println(e.getCause());
+				System.out.println("No such field");
+				return;
+				//e.printStackTrace();
 			}
 		} else {
 			try {
 				f = obj.getClass().getDeclaredField(field);
 			} catch (NoSuchFieldException | SecurityException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
+				System.out.println("No such field");
+				return;
 			}
 		}
 
