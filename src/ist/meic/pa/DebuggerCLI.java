@@ -22,7 +22,6 @@ public class DebuggerCLI {
 	private static Throwable thrownException = null;
 
 	static class CallStack {
-
 		public Object className;
 		String methodName;
 		Object[] methodArgs;
@@ -96,7 +95,8 @@ public class DebuggerCLI {
 			System.out.println(e.getCause());
 			setThrownException(e.getCause());
 		}
-		while(true){
+		
+		do {
 		  ret = startShell();
 		  if(ret.equals("retry")){
 		    try{
@@ -107,10 +107,9 @@ public class DebuggerCLI {
 				System.out.println(e.getCause());
 				setThrownException(e.getCause());
 			}
-		  }else{
-		    return ret;
 		  }
-		}
+		} while (ret.equals("retry"));
+		return ret;
 	}
 
 	public static Object startShell() {
