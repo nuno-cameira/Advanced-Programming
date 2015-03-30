@@ -2,7 +2,6 @@ package ist.meic.pa;
 
 import ist.meic.pa.fields.FieldFactory;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -60,9 +59,8 @@ public class DebuggerCLI {
 	public static void printCallStack() {
 		System.out.println("Call Stack:");
 		String formatOutput = "";
-		// for (CallStack cs : callStack) {
+		
 		List<CallStack> stampTemp = new Stack<CallStack>();
-		// Stack<CallStack> stampTemp = new Stack<CallStack>();
 		stampTemp.addAll(callStack);
 		Stack<CallStack> stampTemp2 = new Stack<CallStack>();
 		stampTemp2 = (Stack<CallStack>) stampTemp;
@@ -113,32 +111,6 @@ public class DebuggerCLI {
 		    return ret;
 		  }
 		}
-		
-		/*
-		try {
-			return DebuggerCLI.lastObj.invokeMethodOnStack();
-		} catch (IllegalArgumentException | SecurityException
-				| NoSuchMethodException | IllegalAccessException
-				| InvocationTargetException e) {
-			System.out.println(e.getCause());
-			setThrownException(e.getCause());
-			return startShell();
-		}
-		*/
-	}
-	
-	public static void retryRun() {
-		//run();
-		/*
-		try {
-			DebuggerCLI.lastObj.invokeMethodOnStack();
-		} catch (IllegalArgumentException | SecurityException
-				| NoSuchMethodException | IllegalAccessException
-				| InvocationTargetException e) {
-			System.out.println(e.getCause());
-			setThrownException(e.getCause());
-		}
-		*/
 	}
 
 	public static Object startShell() {
@@ -171,7 +143,6 @@ public class DebuggerCLI {
 				processSet(argument, value);
 				break;
 			case "Retry":
-				//processRetry();
 				return "retry";
 			default:
 				System.out.println("Unknown command");
@@ -235,8 +206,7 @@ public class DebuggerCLI {
 			callStack.pop();
 			return FieldFactory.getType(argument, m.getReturnType().getName());
 		}else{
-			System.out.println("problem.. method not found");
-			//callStack.pop();
+			System.out.println("Method not found!");
 			return m;
 		}
 
@@ -248,20 +218,6 @@ public class DebuggerCLI {
 
 	private static void processSet(String field, String value) {
 		DebuggerCLI.lastObj.setField(field, value);
-	}
-
-	private static void processRetry() {
-
-		try {
-			DebuggerCLI.lastObj.invokeMethodOnStack();
-		} catch (IllegalArgumentException | SecurityException
-				| NoSuchMethodException | IllegalAccessException
-				| InvocationTargetException e) {
-			DebuggerCLI.setThrownException(e);
-			System.out.println(e.getCause());
-		}
-		System.out.println("AFTER RETRY");
-
 	}
 
 	public static Class<?>[] getClassesOfMethodArgs(CallStack cs) {
@@ -293,19 +249,19 @@ public class DebuggerCLI {
 			arguments[i] = args[i + 1];
 		}
 
-		// Translator translator = new MyTranslator();
+		Translator translator = new MyTranslator();
 		ClassPool pool = ClassPool.getDefault();
 		Loader loader = new Loader();
+		
 		// VERY IMPORTANT LINE
 		loader.delegateLoadingOf(ist.meic.pa.DebuggerCLI.class.getName());
 
 		try {
-			loader.addTranslator(pool, new MyTranslator());
-			System.out.println("MAIN:" + classname);
+			loader.addTranslator(pool, translator);
 			Class<?> c = Class.forName(classname);
 			Object o = c.newInstance();
 			Object[] obs = { classname };
-			//
+			
 			callStack.push(new DebuggerCLI.CallStack(o, "main", obs));
 			setLastObj(Class.forName(classname));
 			loader.run(classname, arguments);
