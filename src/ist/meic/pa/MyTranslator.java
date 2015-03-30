@@ -14,7 +14,7 @@ public class MyTranslator implements Translator {
 	@Override
 	public void onLoad(ClassPool pool, String classname)
 			throws NotFoundException, CannotCompileException {
-		// System.out.println("on Load: " + classname);
+		
 		CtClass cc = pool.get(classname);
 		CtMethod[] ctmethods = cc.getDeclaredMethods();
 
@@ -25,11 +25,9 @@ public class MyTranslator implements Translator {
 					try {
 						packageName = m.getMethod().getDeclaringClass()
 								.getPackageName();
-						//System.out.println("  Tried to instrument "+m.getMethodName()+packageName);
 
-						if (packageName.equals("test") || m.getMethodName().equals("parseInt")) { // TODO !!!!
-							//System.out.println("  Instrumented " 
-							//		+ m.getMethodName());
+						if (packageName.equals("test") || m.getMethodName().equals("parseInt")) { 
+
 							String name = m.getMethodName();
 							m.replace("{  ist.meic.pa.DebuggerCLI.setLastObj($0); "
 									+ "   ist.meic.pa.DebuggerCLI.addToStack($class,\""+ name + "\", $args); "
@@ -38,7 +36,6 @@ public class MyTranslator implements Translator {
 									+ "      	 throw (Throwable)o; "
 									+ "   } "
 									+ "   else {"
-//									+ "      System.out.println(\"->\"\""+name+"\"+\" \"+($r)o);"
 									+ "      $_ = ($r)o;"
 									+ "   } "
 									+ "}");
