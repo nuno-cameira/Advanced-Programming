@@ -25,7 +25,10 @@ public class MyTranslator implements Translator {
 					try {
 						packageName = m.getMethod().getDeclaringClass()
 								.getPackageName();
-
+						
+						/* 
+						 * Problem - the classes are not filtered properly
+						 */
 						if (packageName.equals("test") || m.getMethodName().equals("parseInt")) { 
 
 							String name = m.getMethodName();
@@ -51,6 +54,7 @@ public class MyTranslator implements Translator {
 	@Override
 	public void start(ClassPool arg0) throws NotFoundException,
 			CannotCompileException {
+		//not needed
 	}
 
 }

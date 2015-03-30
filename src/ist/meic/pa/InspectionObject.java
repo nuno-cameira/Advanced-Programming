@@ -27,23 +27,31 @@ public class InspectionObject {
 		CallStack cs = DebuggerCLI.getCallStack().peek();
 		String methodName = cs.methodName;
 
-		// check if arguments to method were null
+		/*
+		 * Check if arguments to method were null
+		 */
 		if (cs.methodArgs[0] == null) {
 			if (this.obj != null) {
+				/*
+				 * Non-static method
+				 */
 				Method[] methods = this.obj.getClass().getMethods();
 				for (Method m : methods) {
 					if (m.getName().equals(cs.methodName)) {
 						m.setAccessible(true);
 						Object o = m.invoke(this.obj, cs.methodArgs);
-						DebuggerCLI.getCallStack().pop(); // if there is no
-															// exception thrown
-															// on invoke.. pop
-															// the method from
-															// the call stack
+						/*
+						 * If there is no exception thrown on invoke, then pop
+						 * the method from the call stack
+						 */
+						DebuggerCLI.getCallStack().pop();
 						return o;
 					}
 				}
 			} else {
+				/*
+				 * Static method
+				 */
 				Class<?> c = (Class<?>) cs.className;
 				Method[] methods = c.getMethods();
 				for (Method m : methods) {
@@ -57,6 +65,9 @@ public class InspectionObject {
 			}
 		}
 
+		/*
+		 * The arguments are not null
+		 */
 		Class<?>[] args = DebuggerCLI.getClassesOfMethodArgs(cs);
 
 		if (this.obj != null) {
@@ -154,7 +165,7 @@ public class InspectionObject {
 		} else {
 			fields = obj.getClass().getDeclaredFields();
 		}
-		
+
 		System.out.print("       Fields:  ");
 		String formatOutput = "";
 		for (Field f : fields) {

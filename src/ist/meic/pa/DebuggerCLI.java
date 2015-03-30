@@ -36,13 +36,7 @@ public class DebuggerCLI {
 	public static Stack<CallStack> getCallStack() {
 		return callStack;
 	}
-
-	public static void printArgs(Object[] methodArgs) {
-		for (Object o : methodArgs) {
-			System.out.println("ARGUMENTS" + o);
-		}
-	}
-
+	
 	public static void addToStack(Object classname, String methodName,
 			Object[] methodArgs) {
 		if (lastObj.getObj() != null) {
@@ -53,17 +47,17 @@ public class DebuggerCLI {
 					methodArgs));
 		}
 	}
-
+	
 	public static void printCallStack() {
 		System.out.println("Call Stack:");
 		String formatOutput = "";
 		
-		List<CallStack> stampTemp = new Stack<CallStack>();
-		stampTemp.addAll(callStack);
-		Stack<CallStack> stampTemp2 = new Stack<CallStack>();
-		stampTemp2 = (Stack<CallStack>) stampTemp;
-		while (!stampTemp2.empty()) {
-			CallStack cs = stampTemp2.pop();
+		List<CallStack> stackTemp = new Stack<CallStack>();
+		stackTemp.addAll(callStack);
+		Stack<CallStack> callStackTemp = new Stack<CallStack>();
+		callStackTemp = (Stack<CallStack>) stackTemp;
+		while (!callStackTemp.empty()) {
+			CallStack cs = callStackTemp.pop();
 			if (cs.className instanceof Class<?>) {
 				Class<?> c = (Class<?>) cs.className;
 				System.out.print(c.getName() + "." + cs.methodName + "(");
@@ -78,6 +72,14 @@ public class DebuggerCLI {
 			formatOutput = "";
 			System.out.println(")");
 		}
+	}
+
+	public static Throwable getThrownException() {
+		return thrownException;
+	}
+
+	public static void setThrownException(Throwable thrownException) {
+		DebuggerCLI.thrownException = thrownException;
 	}
 
 	public static void setLastObj(Object lastObj) {
@@ -158,7 +160,11 @@ public class DebuggerCLI {
 		String methodName = cs.methodName;
 
 		Object last = DebuggerCLI.lastObj.getObj();
-		if (cs.methodArgs[0] == null) { // TODO cleanup
+		
+		if (cs.methodArgs[0] == null) {
+			/*
+			 *  Non-static method
+			 */
 			if (last != null) {
 				Method[] methods = last.getClass().getMethods();
 				for (Method m : methods) {
@@ -168,6 +174,9 @@ public class DebuggerCLI {
 					}
 				}
 			} else {
+				/*
+				 *  Static method
+				 */
 				Class<?> c = (Class<?>) cs.className;
 				Method[] methods = c.getMethods();
 				for (Method m : methods) {
@@ -178,16 +187,25 @@ public class DebuggerCLI {
 				}
 			}
 		}
-
+		
+		/*
+		 * Arguments not null
+		 */
 		Class<?>[] args = DebuggerCLI.getClassesOfMethodArgs(cs);
 
 		Method m = null;
 		try {
 			if (last != null) {
+				/*
+				 * Non-static method
+				 */
 				m = last.getClass().getMethod(methodName, args);
 				m.setAccessible(true);
 				return m;
 			} else {
+				/*
+				 * Static-method
+				 */
 				Class<?> c = (Class<?>) cs.className;
 				m = c.getMethod(methodName, args);
 				m.setAccessible(true);
@@ -222,7 +240,9 @@ public class DebuggerCLI {
 	public static Class<?>[] getClassesOfMethodArgs(CallStack cs) {
 		ArrayList<Class<?>> argsTemp = new ArrayList<Class<?>>();
 
-		// builds an ArrayList with the argument's type for that method
+		/*
+		 * Builds an ArrayList with the argument's type for that method
+		 */
 		for (Object o : cs.methodArgs) {
 			Class<?> cc = null;
 			if (Unwrapper.isWrapperType(o.getClass())) {
@@ -233,12 +253,14 @@ public class DebuggerCLI {
 			argsTemp.add(cc);
 		}
 
-		// converts ArrayList to a simple array
+		/*
+		 *  Converts ArrayList to a simple array
+		 */
 		Class<?>[] argsType = new Class<?>[argsTemp.size()];
 		Class<?>[] args = argsTemp.toArray(argsType);
 		return args;
 	}
-
+	
 	public static void main(String[] args) {
 
 		String classname = args[0];
@@ -252,7 +274,6 @@ public class DebuggerCLI {
 		ClassPool pool = ClassPool.getDefault();
 		Loader loader = new Loader();
 		
-		// VERY IMPORTANT LINE
 		loader.delegateLoadingOf(ist.meic.pa.DebuggerCLI.class.getName());
 
 		try {
@@ -268,13 +289,5 @@ public class DebuggerCLI {
 			System.out.println(e.getCause());
 			e.printStackTrace();
 		}
-	}
-
-	public static Throwable getThrownException() {
-		return thrownException;
-	}
-
-	public static void setThrownException(Throwable thrownException) {
-		DebuggerCLI.thrownException = thrownException;
 	}
 }
