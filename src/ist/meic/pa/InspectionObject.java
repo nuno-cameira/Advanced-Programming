@@ -1,6 +1,6 @@
 package ist.meic.pa;
 
-import ist.meic.pa.DebuggerCLI.CallStack;
+import ist.meic.pa.CallStack;
 import ist.meic.pa.fields.FieldFactory;
 import ist.meic.pa.fields.FieldType;
 

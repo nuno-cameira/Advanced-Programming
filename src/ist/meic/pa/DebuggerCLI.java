@@ -20,19 +20,6 @@ public class DebuggerCLI {
 	private static Stack<CallStack> callStack = new Stack<CallStack>();
 	private static Throwable thrownException = null;
 
-	static class CallStack {
-		public Object className;
-		String methodName;
-		Object[] methodArgs;
-
-		public CallStack(Object className, String methodName,
-				Object[] methodArgs) {
-			this.className = className;
-			this.methodName = methodName;
-			this.methodArgs = methodArgs;
-		}
-	}
-
 	public static Stack<CallStack> getCallStack() {
 		return callStack;
 	}
@@ -40,10 +27,10 @@ public class DebuggerCLI {
 	public static void addToStack(Object classname, String methodName,
 			Object[] methodArgs) {
 		if (lastObj.getObj() != null) {
-			callStack.push(new DebuggerCLI.CallStack(lastObj.getObj(),
+			callStack.push(new CallStack(lastObj.getObj(),
 					methodName, methodArgs));
 		} else {
-			callStack.push(new DebuggerCLI.CallStack(classname, methodName,
+			callStack.push(new CallStack(classname, methodName,
 					methodArgs));
 		}
 	}
@@ -280,9 +267,8 @@ public class DebuggerCLI {
 			loader.addTranslator(pool, translator);
 			Class<?> c = Class.forName(classname);
 			Object o = c.newInstance();
-			Object[] obs = { classname };
 			
-			callStack.push(new DebuggerCLI.CallStack(o, "main", obs));
+			callStack.push(new CallStack(o, "main", arguments));
 			setLastObj(Class.forName(classname));
 			loader.run(classname, arguments);
 		} catch (Throwable e) {
