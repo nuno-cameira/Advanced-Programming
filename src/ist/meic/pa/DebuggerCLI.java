@@ -81,7 +81,6 @@ public class DebuggerCLI {
 				| NoSuchMethodException | IllegalAccessException
 				| InvocationTargetException e) {
 			System.out.println(e.getCause());
-			
 			setThrownException(e.getCause());
 		}
 		
@@ -116,7 +115,11 @@ public class DebuggerCLI {
 			case "Throw":
 				callStack.pop();
 				CallStack c = callStack.peek();
-				setLastObj(c.className);
+				if(c.className instanceof Class<?>){
+					setLastObj(null);
+				}else{
+					setLastObj(c.className);
+				}
 				return getThrownException();
 			case "Return":
 				argument = scanner.next();

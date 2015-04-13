@@ -11,50 +11,47 @@ import javassist.expr.MethodCall;
 
 public class MyTranslator implements Translator {
 
-	@Override
 	public void onLoad(ClassPool pool, String classname)
 			throws NotFoundException, CannotCompileException {
-		
+
 		CtClass cc = pool.get(classname);
 		CtMethod[] ctmethods = cc.getDeclaredMethods();
 
-		for (CtMethod ctm : ctmethods) {
-			ctm.instrument(new ExprEditor() {
-				public void edit(MethodCall m) throws CannotCompileException {
-					String packageName = null;
-					try {
-						packageName = m.getMethod().getDeclaringClass()
-								.getPackageName();
-						
-						/* 
-						 * Problem - the classes are not filtered properly
-						 */
-						if (packageName.equals("test") || m.getMethodName().equals("parseInt")) { 
+		String packageName = cc.getPackageName();
 
-							String name = m.getMethodName();
-							m.replace("{  ist.meic.pa.DebuggerCLI.setLastObj($0); "
-									+ "   ist.meic.pa.DebuggerCLI.addToStack($class,\""+ name + "\", $args); "
+		if (!packageName.equals("ist.meic.pa")
+				&& !packageName.startsWith("javassist") && packageName != null) {
+
+			for (CtMethod ctm : ctmethods) {
+
+				ctm.instrument(new ExprEditor() {
+					public void edit(MethodCall m)
+							throws CannotCompileException {
+						String name = m.getMethodName();
+						if (!m.getClassName().startsWith("java.io")) {
+
+							m.replace("{  "
+									+ "   ist.meic.pa.DebuggerCLI.setLastObj($0); "
+									+ "   ist.meic.pa.DebuggerCLI.addToStack($class,\""
+									+ name
+									+ "\", $args); "
 									+ "   Object o = ist.meic.pa.DebuggerCLI.run(); "
 									+ "   if(o instanceof Exception) { "
-									+ "      	 throw (Throwable)o; "
+									+ "      	 throw (Throwable)o; " + "   } "
+									+ "   else {" + "      $_ = ($r)o;"
 									+ "   } "
-									+ "   else {"
-									+ "      $_ = ($r)o;"
-									+ "   } "
+
 									+ "}");
 						}
-					} catch (NotFoundException e) {
-						e.printStackTrace();
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 
-	@Override
 	public void start(ClassPool arg0) throws NotFoundException,
 			CannotCompileException {
-		//not needed
+		// not needed
 	}
 
 }

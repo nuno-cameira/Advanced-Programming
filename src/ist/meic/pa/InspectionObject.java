@@ -30,7 +30,7 @@ public class InspectionObject {
 		/*
 		 * Check if arguments to method were null
 		 */
-		if (cs.methodArgs[0] == null) {
+		if (cs.methodArgs.length > 1 && cs.methodArgs[0] == null) {
 			if (this.obj != null) {
 				/*
 				 * Non-static method
