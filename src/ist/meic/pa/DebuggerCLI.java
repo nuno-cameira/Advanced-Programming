@@ -151,7 +151,7 @@ public class DebuggerCLI {
 
 		Object last = DebuggerCLI.lastObj.getObj();
 		
-		if (cs.methodArgs[0] == null) {
+		if (cs.methodArgs.length > 0 && cs.methodArgs[0] == null) {
 			/*
 			 *  Non-static method
 			 */
@@ -184,6 +184,7 @@ public class DebuggerCLI {
 		Class<?>[] args = DebuggerCLI.getClassesOfMethodArgs(cs);
 
 		Method m = null;
+		
 		try {
 			if (last != null) {
 				/*

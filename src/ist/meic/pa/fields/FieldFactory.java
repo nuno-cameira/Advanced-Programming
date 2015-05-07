@@ -12,7 +12,7 @@ public class FieldFactory {
         else if("long".equalsIgnoreCase(type)) return new FieldLong(o, f);
         else if("double".equalsIgnoreCase(type)) return new FieldDouble(o, f);
         else if("float".equalsIgnoreCase(type)) return new FieldFloat(o, f);
-        else if("byte".equalsIgnoreCase(type)) return new FieldFloat(o, f);
+        else if("byte".equalsIgnoreCase(type)) return new FieldByte(o, f);
         return null;
     }
     
@@ -25,6 +25,7 @@ public class FieldFactory {
         else if("double".equalsIgnoreCase(type)){ return new Double( Double.parseDouble(value));}
         else if("float".equalsIgnoreCase(type)) return new Float(Float.parseFloat(value));
         else if("byte".equalsIgnoreCase(type)) return new Byte(Byte.parseByte(value));
+        else if("void".equalsIgnoreCase(type)) return new Object();
         return null;
        }
 }

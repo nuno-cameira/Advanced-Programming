@@ -101,7 +101,16 @@ public class InspectionObject {
 		if (this.getObj() == null) {
 			CallStack cs = DebuggerCLI.getCallStack().peek();
 			try {
-				f = ((Class<?>) cs.className).getDeclaredField(field);
+				Class<?> className = (Class<?>) cs.className;
+				while(className.getSuperclass() != null){
+					try{
+						f = className.getDeclaredField(field);
+						break;
+					}
+					catch(NoSuchFieldException e){
+						className = className.getSuperclass();
+					}
+				}
 				try {
 					if (f.get(obj) == null) {
 						return "null";
@@ -110,18 +119,28 @@ public class InspectionObject {
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					System.out.println("");
 				}
-			} catch (NoSuchFieldException | SecurityException e) {
+			} catch (SecurityException e) {
 				System.out.print("No such field.");
 			}
 		} else {
 			try {
-				f = obj.getClass().getDeclaredField(field);
+				Class<?> className = (Class<?>) obj.getClass();
+				while(className.getSuperclass() != null){
+					try{
+						f = className.getDeclaredField(field);
+						break;
+					}
+					catch(NoSuchFieldException e){
+						className = className.getSuperclass();
+					}
+				}
+				
 				f.setAccessible(true);
 				if (f.get(obj) == null) {
 					return "null";
 				}
 				return f.get(obj).toString();
-			} catch (NoSuchFieldException | SecurityException e) {
+			} catch (SecurityException e) {
 				System.out.print("No such field.");
 			} catch (IllegalArgumentException e) {
 				System.out.println(e.getCause());
@@ -137,15 +156,34 @@ public class InspectionObject {
 		if (this.getObj() == null) {
 			CallStack cs = DebuggerCLI.getCallStack().peek();
 			try {
-				f = cs.className.getClass().getDeclaredField(field);
-			} catch (NoSuchFieldException | SecurityException e) {
+				Class<?> className = (Class<?>) cs.className;
+				while(className.getSuperclass() != null){
+					try{
+						f = className.getClass().getDeclaredField(field);
+						break;
+					}
+					catch(NoSuchFieldException e){
+						className = className.getSuperclass();
+					}
+				}
+				
+			} catch (SecurityException e) {
 				System.out.println("No such field");
 				return;
 			}
 		} else {
 			try {
-				f = obj.getClass().getDeclaredField(field);
-			} catch (NoSuchFieldException | SecurityException e) {
+				Class<?> className = (Class<?>) obj.getClass();
+				while(className.getSuperclass() != null){
+					try{
+						f = className.getDeclaredField(field);
+						break;
+					}
+					catch(NoSuchFieldException e){
+						className = className.getSuperclass();
+					}
+				}
+			} catch (SecurityException e) {
 				System.out.println("No such field");
 				return;
 			}
